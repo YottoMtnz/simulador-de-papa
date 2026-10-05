@@ -30,11 +30,12 @@ Rueda, salta, empuja calabazas y cuestiona tu existencia por colinas, senderos, 
 |--------|----|-------|
 | Rodar | WASD / Flechas | Joystick táctil |
 | Saltar | Espacio | Botón SALTO |
-| Cámara | Arrastrar o Q / E | Arrastrar / pellizcar |
+| Cámara | Mover el ratón (sin clic) o Q / E | Arrastrar / pellizcar |
 | Zoom | Rueda | Pellizca |
 | Bailar | B | — |
 | Logros | L | Botón 🏆 |
-| Pausa | P / Esc | Botón ⏸️ |
+| Pausa (libera el ratón) | P / Esc | Botón ⏸️ |
+| Silenciar | M | Botón 🔊 |
 | Ocultar interfaz | F2 | — |
 
 ## 📁 Archivos
