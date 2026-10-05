@@ -1,1 +1,120 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#243a2d"><title>Simulador de Papa · Tierras Vivas</title><meta name="description" content="Rueda por un mundo natural de árboles, senderos y colinas. Juego 3D gratuito para PC y móvil."><meta http-equiv="refresh" content="0;url=juego.html"><style>body{background:#243a2d;color:#f3efdc;font:18px Georgia,serif;display:grid;place-items:center;height:90vh;margin:0}a{color:inherit;padding:24px}</style></head><body><a href="juego.html">Entrar a Simulador de Papa · Tierras Vivas →</a><script>location.replace('juego.html');</script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🥔 Simulador de Papa · Tierras Vivas</title>
+<meta name="description" content="Rueda por un mundo natural de árboles, senderos y colinas. Juego 3D gratuito para PC y móvil.">
+<style>
+:root{--bg:#0d1410;--bg2:#111a14;--card:#16211a;--teal:#7dc98f;--teal2:#a8e6b0;--gold:#e9b45f;--fg:#f3efdc;--mut:#9db3a0}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+a{color:inherit}
+nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:rgba(13,20,16,.78);backdrop-filter:blur(12px);border-bottom:1px solid #ffffff14}
+.logo{font-weight:900;font-size:1.25rem}
+.logo span{color:var(--teal)}
+.hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:110px 20px 60px;position:relative;overflow:hidden;
+background:linear-gradient(180deg,#0d1410 0%,#16241a 55%,#1e2f1c 100%)}
+.hero::before{content:"";position:absolute;inset:0;background:
+radial-gradient(700px 380px at 20% 12%, #7dc98f22, transparent 60%),
+radial-gradient(800px 500px at 85% 85%, #e9b45f1c, transparent 60%);pointer-events:none}
+.potato{font-size:min(170px,34vw);filter:drop-shadow(0 25px 35px #000a);animation:roll 5s ease-in-out infinite;z-index:1;position:relative}
+@keyframes roll{0%,100%{transform:translateX(-46px) rotate(-28deg)}50%{transform:translateX(46px) rotate(28deg)}}
+.badge{display:inline-block;background:#7dc98f1a;border:1px solid var(--teal);color:var(--teal2);font-weight:700;font-size:.85rem;padding:8px 18px;border-radius:999px;margin:18px 0;z-index:1}
+h1{font-size:clamp(2.2rem,8vw,4.4rem);font-weight:900;line-height:1.05;z-index:1}
+h1 .t{background:linear-gradient(90deg,var(--teal2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);font-size:clamp(1.02rem,3.4vw,1.3rem);max-width:620px;margin:16px auto 30px;z-index:1}
+.cta{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;z-index:1}
+.btn{font-size:1.25rem;font-weight:800;padding:18px 46px;border-radius:18px;border:0;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:10px;transition:transform .15s,box-shadow .15s}
+.btn-play{background:linear-gradient(135deg,var(--teal),#4da663);color:#0a1a0e;box-shadow:0 12px 40px #7dc98f44}
+.btn-play:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 18px 50px #7dc98f66}
+.shots{display:flex;gap:14px;margin-top:44px;z-index:1;flex-wrap:wrap;justify-content:center}
+.shots img{width:min(300px,86vw);border-radius:16px;border:1px solid #ffffff1c;box-shadow:0 14px 40px #0009;transition:transform .2s}
+.shots img:hover{transform:scale(1.04)}
+section{padding:76px 22px;max-width:1100px;margin:0 auto}
+h2{font-size:clamp(1.7rem,5vw,2.5rem);font-weight:900;text-align:center;margin-bottom:14px}
+h2 .t{color:var(--teal2)}
+.lead{text-align:center;color:var(--mut);max-width:640px;margin:0 auto 40px;font-size:1.06rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid #ffffff10;border-radius:22px;padding:26px;transition:transform .2s,border-color .2s}
+.card:hover{transform:translateY(-6px);border-color:#7dc98f55}
+.card .ic{font-size:2.5rem;margin-bottom:10px;display:block}
+.card h3{font-size:1.15rem;margin-bottom:8px}
+.card p{color:var(--mut);line-height:1.55}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.mode{border-radius:22px;padding:30px 24px;text-align:center;border:1px solid #ffffff10}
+.mode h3{font-size:1.3rem;margin:10px 0 8px}
+.mode p{color:#ffffffbb;font-size:.96rem;line-height:1.5}
+.mode .big{font-size:3rem}
+.m-campo{background:linear-gradient(160deg,#3a2f18,#7a5a22)}
+.m-noche{background:linear-gradient(160deg,#0c0c2e,#23235a)}
+.m-ciegas{background:linear-gradient(160deg,#111,#2a2a2a)}
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.gal img{width:100%;border-radius:16px;border:1px solid #ffffff1c;box-shadow:0 10px 30px #0008}
+.gal figure{margin:0}.gal figcaption{text-align:center;color:var(--mut);font-size:.9rem;margin-top:8px}
+footer{border-top:1px solid #ffffff12;padding:38px 22px;text-align:center;color:var(--mut)}
+footer a{color:var(--teal2);text-decoration:none;font-weight:700}
+.dance{font-size:2rem;display:inline-block;animation:dance 1s ease-in-out infinite}
+@keyframes dance{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg) translateY(-6px)}}
+.fp{position:fixed;font-size:1.5rem;opacity:.12;pointer-events:none;z-index:0;animation:float linear infinite}
+@keyframes float{from{transform:translateY(110vh) rotate(0)}to{transform:translateY(-10vh) rotate(360deg)}}
+</style>
+</head>
+<body>
+<nav><div class="logo">🥔 <span>Tierras</span> Vivas</div><a class="btn btn-play" style="padding:10px 24px;font-size:1rem" href="juego.html">▶ Jugar</a></nav>
+<div class="hero">
+  <div class="potato">🥔</div>
+  <div class="badge">🌿 Juego 3D gratuito · en tu navegador</div>
+  <h1>SIMULADOR DE PAPA<br><span class="t">· TIERRAS VIVAS ·</span></h1>
+  <p class="sub">Rueda por colinas, senderos y bosques. Empuja calabazas, haz combos y cuestiona tu existencia en un mundo natural que nunca termina.</p>
+  <div class="cta"><a class="btn btn-play" href="juego.html">▶ JUGAR AHORA</a></div>
+  <div class="shots">
+    <img src="capturas/campo.png" alt="Campo al atardecer" loading="lazy">
+    <img src="capturas/noche.png" alt="Noche lunar" loading="lazy">
+    <img src="capturas/movil.png" alt="En el móvil" loading="lazy">
+  </div>
+</div>
+<section>
+  <h2>Un mundo <span class="t">vivo</span></h2>
+  <p class="lead">Ya no es un plano infinito: ahora hay tierra bajo tus rodadas.</p>
+  <div class="grid">
+    <div class="card"><span class="ic">🌄</span><h3>Terreno natural</h3><p>Colinas, desniveles y un sendero sinuoso. La papa y la cámara se adaptan a la altura.</p></div>
+    <div class="card"><span class="ic">🌲</span><h3>Vegetación viva</h3><p>Árboles con raíces y follaje al viento, hierba, flores y helechos por todas partes.</p></div>
+    <div class="card"><span class="ic">💡</span><h3>Luz y ambiente</h3><p>Atardecer cálido, sombras del follaje, bruma a lo lejos y noche estrellada.</p></div>
+    <div class="card"><span class="ic">🏜️</span><h3>Biomas lejanos</h3><p>Explora y encuentra zonas áridas, cactus, cocos y tundra nevada.</p></div>
+    <div class="card"><span class="ic">🎃</span><h3>Combos y papa dorada</h3><p>Embiste calabazas para encadenar combos. Atrapa la 🥇 papa dorada: 10s de velocidad e invencibilidad.</p></div>
+    <div class="card"><span class="ic">🏆</span><h3>Absurdo garantizado</h3><p>Logros inútiles, papas NPC con nombres graciosos, tu roca mascota 🪨 y pensamientos existenciales.</p></div>
+  </div>
+</section>
+<section>
+  <h2>Elige tu <span class="t">modo</span></h2>
+  <p class="lead">Tres formas de existir. Todas involucran rodar.</p>
+  <div class="modes">
+    <div class="mode m-campo"><div class="big">🌄</div><h3>Salir al campo</h3><p>Luz de tarde, gravedad normal y exploración libre. Para papas relajadas.</p></div>
+    <div class="mode m-noche"><div class="big">🌙</div><h3>Noche lunar</h3><p>Iluminación nocturna, estrellas y gravedad reducida. Mucho caos.</p></div>
+    <div class="mode m-ciegas"><div class="big">🖤</div><h3>A ciegas</h3><p>Sin visión, orientación por sonido. Las papas no tienen ojos. Buena suerte.</p></div>
+  </div>
+</section>
+<section>
+  <h2>Galería <span class="t">📸</span></h2>
+  <p class="lead">Fotos reales del juego. Ninguna papa fue photoshopeada.</p>
+  <div class="gal">
+    <figure><img src="capturas/menu.png" alt="Menú" loading="lazy"><figcaption>Menú sobre el mundo 3D</figcaption></figure>
+    <figure><img src="capturas/campo.png" alt="Campo" loading="lazy"><figcaption>El campo al atardecer</figcaption></figure>
+    <figure><img src="capturas/noche.png" alt="Noche" loading="lazy"><figcaption>Noche lunar</figcaption></figure>
+    <figure><img src="capturas/movil.png" alt="Móvil" loading="lazy"><figcaption>En el móvil con joystick</figcaption></figure>
+    <figure><img src="capturas/menu_movil.png" alt="Menú móvil" loading="lazy"><figcaption>Menú en el móvil</figcaption></figure>
+  </div>
+  <div style="text-align:center;margin-top:40px"><a class="btn btn-play" href="juego.html">▶ JUGAR AHORA</a></div>
+</section>
+<footer>
+  <div style="margin-bottom:12px"><span class="dance">🥔</span></div>
+  <p>Hecho con almidón por <a href="https://github.com/YottoMtnz">YottoMtnz</a></p>
+  <p style="margin-top:8px;font-size:.85rem">Código MIT · Materiales Poly Haven CC0 · <a href="CREDITOS.md">Créditos</a></p>
+</footer>
+<script>
+for(let i=0;i<12;i++){const s=document.createElement('div');s.className='fp';s.textContent=['🥔','🌿','🎃'][i%3];s.style.left=Math.random()*100+'vw';s.style.animationDuration=(10+Math.random()*14)+'s';s.style.animationDelay=(-Math.random()*14)+'s';document.body.appendChild(s)}
+</script>
+</body>
+</html>
