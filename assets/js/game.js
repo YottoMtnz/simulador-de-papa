@@ -259,9 +259,15 @@ cv.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return
  camYaw-=(e.clientX-p[0])*.006;camPitch=Math.max(.12,Math.min(1.3,camPitch+(e.clientY-p[1])*.005));p[0]=e.clientX;p[1]=e.clientY});
 const pup=e=>{ptrs.delete(e.pointerId);pd=0};cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
 cv.addEventListener('wheel',e=>{camD=Math.max(5,Math.min(30,camD*(1+e.deltaY*.001)))});
-let last=performance.now();
+let last=performance.now(),fpsMin=0,gateT=0,fpsFrames=0,fpsClock=performance.now();
+// Limitador de fotogramas: devuelve true si se debe saltar este fotograma.
+function fpsGate(now){if(!fpsMin)return false;if(!gateT)gateT=now;
+ if(now<gateT+fpsMin*.92-.2)return true;
+ gateT+=fpsMin;if(now-gateT>fpsMin*2)gateT=now;return false}
 function loop(now){
   requestAnimationFrame(loop);
+  if(fpsGate(now))return;
+  fpsFrames++;if(now-fpsClock>=500){const f=Math.round(fpsFrames*1000/(now-fpsClock));fpsFrames=0;fpsClock=now;if(!$('fpsMeter').hidden)$('fpsMeter').textContent=f+' FPS'}
   const dt=Math.min((now-last)/1000,.05);last=now;
   if(paused){if(mode!=='real')renderer.render(scene,camera);else renderer.clear();return}
   if(playing){
@@ -393,6 +399,35 @@ addEventListener('blur',()=>{for(const k in keys)keys[k]=0;jx=jz=0;wantJump=fals
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing&&!paused)setPaused(true)});
 function disposeGold(){if(!goldMesh)return;scene.remove(goldMesh);goldMesh.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(o.material.map)o.material.map.dispose();o.material.dispose()}});goldMesh=null}
 // Explicit diagnostics for regression and visual smoke tests, read-only during normal play.
-window.PapaDiagnostics={snapshot:()=>({camYaw,camPitch,locked:lockActive(),rocoso:rocoso?{x:rocoso.g.position.x,y:rocoso.g.position.y,z:rocoso.g.position.z}:null,mode,playing,paused,position:{x:px,y:py,z:pz},floor:terrainHeight(px,pz),chunks:world.chunks.size,props:ACT.length,quality:world.quality,textureFailures:world.textureFailures,loadedTextures:world.textureTotal-world.pending,renderer:renderer.info.render,memory:renderer.info.memory}),height:terrainHeight,teleport:(x,z,ax,az)=>{px=x;pz=z;vx=ax||0;vz=az||0;py=terrainHeight(x,z)+PR*.88;vy=0}};
+
+// ===== pantalla completa y límite de FPS =====
+const DESK=window.papaDesktop||null;
+const CAPN=(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())?((Capacitor.Plugins||{}).PapaNative||null):null;
+const ANDROID=!!CAPN||(!DESK&&matchMedia('(pointer:coarse)').matches);
+if(CAPN)document.body.classList.add('native-android');
+const FPS_PC=[['vsync','V-Sync (pantalla)',0],['30','30 FPS',30],['60','60 FPS',60],['120','120 FPS',120],['240','240 FPS',240],['max','Sin límite',0]];
+const FPS_MOB=[['auto','Automático (pantalla)',0],['60','60 Hz',60],['90','90 Hz',90],['120','120 Hz',120]];
+const FPS_LIST=ANDROID?FPS_MOB:FPS_PC,FPS_KEY=ANDROID?'papa_fps_mob':'papa_fps_pc';
+let fpsIdx=0;try{const v=FPS_LIST.findIndex(x=>x[0]===localStorage.getItem(FPS_KEY));if(v>=0)fpsIdx=v}catch(e){}
+function applyFps(notify){const m=FPS_LIST[fpsIdx];fpsMin=m[2]?1000/m[2]:0;gateT=0;
+ document.querySelectorAll('.js-fps').forEach(b=>b.textContent=(ANDROID?'Frecuencia: ':'Fotogramas: ')+m[1]);
+ if(CAPN){try{CAPN.setRefreshRate({hz:m[2]||0}).catch(()=>{})}catch(e){}}
+ if(DESK){DESK.setFps(m[0]).then(r=>{if(r&&r.relaunching)toast('Reiniciando para aplicar el límite…')}).catch(()=>{})}
+ if(notify){toast(m[1]);if(!ANDROID&&!DESK&&(m[0]==='max'||m[2]>60))toast(m[1]+'\nEn el navegador no se supera la frecuencia del monitor. Usa la versión .exe para ello.')}}
+function cycleFps(){fpsIdx=(fpsIdx+1)%FPS_LIST.length;try{localStorage.setItem(FPS_KEY,FPS_LIST[fpsIdx][0])}catch(e){}applyFps(true)}
+document.querySelectorAll('.js-fps').forEach(b=>b.onclick=cycleFps);
+let isFull=false;
+function fsLabel(){document.querySelectorAll('.js-fs').forEach(b=>b.textContent=isFull?'⛶ Salir de pantalla completa':'⛶ Pantalla completa')}
+function toggleFull(){if(CAPN)return;
+ if(DESK){DESK.setFullscreen(!isFull);return}
+ if(document.fullscreenElement){document.exitFullscreen&&document.exitFullscreen()}
+ else{const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen||(()=>Promise.reject())).call(el).catch(()=>toast('Tu navegador no permite pantalla completa aquí'))}}
+document.addEventListener('fullscreenchange',()=>{isFull=!!document.fullscreenElement;fsLabel()});
+if(DESK){DESK.onFullscreen(v=>{isFull=v;fsLabel()});DESK.getState().then(st=>{isFull=!!st.fullscreen;fsLabel()}).catch(()=>{})}
+document.querySelectorAll('.js-fs').forEach(b=>b.onclick=toggleFull);
+addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!CAPN){toggleFull();e.preventDefault()}
+ if(e.code==='F3'){e.preventDefault();$('fpsMeter').hidden=!$('fpsMeter').hidden}});
+fsLabel();applyFps(false);
+window.PapaDiagnostics={fpsGate,snapshot:()=>({camYaw,camPitch,locked:lockActive(),rocoso:rocoso?{x:rocoso.g.position.x,y:rocoso.g.position.y,z:rocoso.g.position.z}:null,mode,playing,paused,position:{x:px,y:py,z:pz},floor:terrainHeight(px,pz),chunks:world.chunks.size,props:ACT.length,quality:world.quality,textureFailures:world.textureFailures,loadedTextures:world.textureTotal-world.pending,renderer:renderer.info.render,memory:renderer.info.memory}),height:terrainHeight,teleport:(x,z,ax,az)=>{px=x;pz=z;vx=ax||0;vz=az||0;py=terrainHeight(x,z)+PR*.88;vy=0}};
 renderAch();requestAnimationFrame(loop);
 const loadStart=performance.now();function ready(){if(world.pending&&performance.now()-loadStart<15000){$('loadMsg').textContent='Preparando materiales y paisaje…';setTimeout(ready,100);return}const l=$('load');l.classList.add('ready');setTimeout(()=>l.remove(),700);if(world.textureFailures.length)toast('Algunos materiales no se cargaron. Vuelve a abrir el juego.')}ready();
