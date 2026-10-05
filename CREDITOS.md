@@ -26,6 +26,8 @@ Se distribuyen mapas a 1024 píxeles, recomprimidos e incorporados en `textures.
 
 Créditos de los conjuntos: Rob Tuytel, Rico Cilliers y Dimitrios Savva, según las fichas enlazadas. Licencia de la biblioteca de materiales: https://polyhaven.com/license — CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
 
+La piel de la papa (`forest_ground_04`), las calabazas (`rock_boulder_dry`) y los cactus (`bark_brown_01`) mezclan la luminancia y las normales de esos mapas con una base de color procedural (`photoOverlay` en `nature.js`).
+
 Las montañas del horizonte (`Nature.buildMountains`) usan `rock_boulder_dry` y `aerial_grass_rock` de la tabla anterior.
 
 ## Geometría y recursos propios
