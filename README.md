@@ -36,7 +36,13 @@ Rueda, salta, empuja calabazas y cuestiona tu existencia por colinas, senderos, 
 | Logros | L | Botón 🏆 |
 | Pausa (libera el ratón) | P / Esc | Botón ⏸️ |
 | Silenciar | M | Botón 🔊 |
+| Pantalla completa | F o F11 | Siempre (horizontal e inmersivo) |
+| Mostrar FPS | F3 | — |
 | Ocultar interfaz | F2 | — |
+
+## 🖥️ Pantalla completa
+
+El menú principal y la pausa tienen *Pantalla completa*. En el navegador no se puede superar la frecuencia del monitor.
 
 ## 📁 Archivos
 
