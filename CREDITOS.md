@@ -26,6 +26,8 @@ Se distribuyen mapas a 1024 píxeles, recomprimidos e incorporados en `textures.
 
 Créditos de los conjuntos: Rob Tuytel, Rico Cilliers y Dimitrios Savva, según las fichas enlazadas. Licencia de la biblioteca de materiales: https://polyhaven.com/license — CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
 
+Las montañas del horizonte (`Nature.buildMountains`) usan `rock_boulder_dry` y `aerial_grass_rock` de la tabla anterior.
+
 ## Geometría y recursos propios
 
-Terreno, raíces, ramas, hierba, helechos, flores, siluetas del horizonte, señal, valla, interfaz y generadores de superficies de papa y calabaza: generados por el código del proyecto. Sonido por Web Audio, como en la base original. No se incluyen pistas musicales de terceros.
+Terreno, raíces, ramas, hierba, helechos, flores, señal, valla, interfaz y generadores de superficies de papa y calabaza: generados por el código del proyecto. Sonido por Web Audio, como en la base original. No se incluyen pistas musicales de terceros.
