@@ -1,22 +1,29 @@
 
 const $=id=>document.getElementById(id);
 function rnd(a,b){return a+Math.random()*(b-a)}
+// Color vivo: ACES apaga los colores, asi que tras el tone mapping se sube la saturacion y se calienta un poco
+THREE.ShaderChunk.tonemapping_fragment=THREE.ShaderChunk.tonemapping_fragment.replace('gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );',
+ 'gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );\n\tgl_FragColor.rgb = max( mix( vec3( dot( gl_FragColor.rgb, vec3( .2126, .7152, .0722 ) ) ), gl_FragColor.rgb, 1.22 ) * vec3( 1.01, 1., .99 ), 0. );');
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
 renderer.outputEncoding=THREE.sRGBEncoding;
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.65));
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
 document.body.prepend(renderer.domElement);
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(53,1,.12,600);
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.fov=w/h<1?66:53;camera.updateProjectionMatrix()}
+// Resolucion: nitida hasta 4K (3840x2160 como maximo) y adaptativa para no bajar de fps
+let resScale=1;const MAXPX=3840*2160,COARSE=matchMedia('(pointer:coarse)').matches;
+function applyPR(){const q=window.world&&world.quality==='bajo';const cap=q?1:Math.min(devicePixelRatio||1,COARSE?1.65:2);
+ const fit=Math.sqrt(MAXPX/(innerWidth*innerHeight));const v=Math.round(Math.max(.5,Math.min(cap,fit)*(q?1:resScale))*20)/20;
+ if(Math.abs(v-renderer.getPixelRatio())>.01)renderer.setPixelRatio(v)}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);if(window.world)applyPR();camera.aspect=w/h;camera.fov=w/h<1?66:53;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 
 const hemi=new THREE.HemisphereLight(0xffe2b0,0x4a3a22,.9);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffc27a,1.1);sun.position.set(20,25,10);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.00025;sun.shadow.normalBias=.035;sun.shadow.radius=2;Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:125});scene.add(sun,sun.target);
 
-const world=new Nature.World(renderer,scene,sun,hemi,camera);
+const world=new Nature.World(renderer,scene,sun,hemi,camera);window.world=world;world.onQuality=applyPR;applyPR();
 const ground=world.ground,skinT=world.skin;
 function rockMesh(){return world.makeRock(1.3)}
 const terrainHeight=Nature.height;
@@ -62,21 +69,26 @@ function updateParts(dt){
  pGeo.attributes.position.needsUpdate=true;pGeo.attributes.color.needsUpdate=true}
 
 // sprites de texto (nombres NPC, pensamientos, papa dorada)
-function textSprite(text,fs,fg){const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');
- x.font='500 '+(fs||36)+'px Georgia';x.textAlign='center';x.lineWidth=9;x.strokeStyle='rgba(0,0,0,.75)';
- x.strokeText(text,256,66);x.fillStyle=fg||'#fff';x.fillText(text,256,66);
- const t=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));
+// Texto con volumen: extrusion marron, contorno oscuro y relleno degradado (mismo estilo que el combo)
+function chunkyText(x,t,cx,cy,fs,fill){x.font='italic 900 '+fs+'px Georgia,"Palatino Linotype",serif';x.textAlign='center';x.lineJoin='round';x.miterLimit=2;
+ const depth=Math.max(2,Math.round(fs/8));x.lineWidth=fs*.24;
+ for(let i=depth;i>=1;i--){x.strokeStyle=i>depth*.66?'#5a3109':i>depth*.33?'#8f5410':'#c98a2b';x.strokeText(t,cx,cy+i)}
+ x.strokeStyle='#2f1a08';x.strokeText(t,cx,cy);
+ const gr=x.createLinearGradient(0,cy-fs*.8,0,cy);gr.addColorStop(0,'#fffbe0');gr.addColorStop(1,fill||'#ffd25a');x.fillStyle=gr;x.fillText(t,cx,cy)}
+function textSprite(text,fs,fg){const c=document.createElement('canvas');c.width=1024;c.height=256;const x=c.getContext('2d');
+ chunkyText(x,text,512,140,(fs||36)*1.75,fg);
+ const t=new THREE.CanvasTexture(c);t.anisotropy=4;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));
  s.scale.set(3.4,.85,1);return s}
 // pensamiento flotante de la papa
-const thinkC=document.createElement('canvas');thinkC.width=512;thinkC.height=128;
+const thinkC=document.createElement('canvas');thinkC.width=1024;thinkC.height=256;
 const thinkTex=new THREE.CanvasTexture(thinkC);
 const thinkS=new THREE.Sprite(new THREE.SpriteMaterial({map:thinkTex,transparent:true,opacity:0,depthWrite:false}));
-thinkS.scale.set(5.2,1.3,1);thinkS.position.set(0,3.2,0);potato.add(thinkS);
-function showThought(t){const x=thinkC.getContext('2d');x.clearRect(0,0,512,128);x.font='900 32px system-ui';x.textAlign='center';x.lineWidth=7;x.strokeStyle='rgba(0,0,0,.75)';
+thinkS.scale.set(8,2,1);thinkS.position.set(0,3.6,0);potato.add(thinkS);
+function showThought(t){const x=thinkC.getContext('2d');x.clearRect(0,0,1024,256);
  const ws=t.split(' ');let l1='',l2='';
  for(const w of ws){if((l1+' '+w).trim().length<26)l1=(l1+' '+w).trim();else l2=(l2+' '+w).trim()}
- x.strokeText(l1,256,52);x.fillStyle='#fff';x.fillText(l1,256,52);
- if(l2){x.strokeText(l2,256,94);x.fillText(l2,256,94)}
+ chunkyText(x,l1,512,l2?100:150,56);
+ if(l2)chunkyText(x,l2,512,196,56);
  thinkTex.needsUpdate=true;thinkOp=1.8;ach('existencia')}
 
 // estado
@@ -96,8 +108,20 @@ const Q={
  real:['Algo me golpeó. No sé qué. No tengo ojos 🖤','Eso estuvo duro. ¿Una roca? ¿Mi destino?','Todo es oscuridad y yo ruedo','Oigo mi corazón de almidón 💓']};
 Q.cactus=['¡Ay! Pica pica 🌵','Abracé un cactus. Mala idea.','Ahora soy una papa con espinas'];Q.snowman=['¡Decapité a Olaf! ⛄','El muñeco de nieve se quedó helado','Perdón, amigo de nieve'];
 const THOUGHTS=['¿Soy papa o la papa es yo?','El puré es solo papa que se rindió','Si ruedo en el bosque y nadie me ve... ¿hice ruido?','Mi destino es el horno, pero hoy ruedo','¿Las papas fritas son canibalismo?','El almidón fluye a través de mí','Tal vez el suelo también sueña con ser papa','Rodar es la respuesta. ¿Cuál era la pregunta?'];
-const NPC_PHRASES=['El que rueda, perdura 🥔','No juzgues a una papa por su cáscara','Dicen que el horno es solo un rumor','Yo una vez vi el mar. Era salado como mis lágrimas','Rueda despacio y llegarás... a donde sea','La gravedad es solo una sugerencia','Soy almidón, luego existo','El secreto es no dejar de rodar'];
-let AC=null,muted=false,rollGain,rollFilter,hb=0,nextMile=100,idleT=0;
+// Hitos: solo cada 1000 m (1 km, 2 km...)
+const kmT=k=>k===1?'1 km':k+' km';
+const MILES=[k=>'¡'+kmT(k)+' rodados! Mamá papa estaría orgullosa 🥔',k=>'¡'+kmT(k)+'! Soy un atleta del almidón',k=>kmT(k)+' y sin una sola arruga… bueno, una o dos',k=>'¡'+kmT(k)+'! Dicen que de aquí se ve el puré prometido',k=>kmT(k)+' de pura gloria patatera 🏅',k=>'¡'+kmT(k)+'! Hasta las zanahorias me respetan',k=>'Mi cáscara ya cuenta '+kmT(k)+' de historias',k=>'¡'+kmT(k)+'! Ni el horno me alcanza']; 
+Q.pump.push('Calabaza, yo soy tu padre… de almidón','Esa calabaza ya no volverá a ser pastel','Cuidado, que esta papa muerde (rodando)','Fue un choque entre gigantes del huerto','Las calabazas también tienen derecho a volar','¡Pumba! Cena de halloween adelantada 🎃','Tranquila, calabaza, no es nada personal','Entrené años en el sótano para este momento');
+Q.coco.push('Coco, ¿eres tú o es mi mareo?','¡Cocotazo! 🥥 Eso va para el récord','Un coco menos, una leyenda más','Agua de coco: papa 1, coco 0','Los cocos caen, las papas se levantan');
+Q.rock.push('La roca y yo tenemos asuntos pendientes','Dura es la vida… y esta roca más','Roca, algún día seremos amigos','Si me parto, díganle a mi madre que rodé con honor','No es una roca, es un obstáculo con ego','Mi cáscara tiene más cicatrices que tu cantera','Choque épico: almidón contra mineral 🪨');
+Q.tree.push('Árbol, tú aguantas el viento; yo, el mundo','Hasta los robles me ven pasar con respeto','Nadie olvida el día que una papa abrazó un tronco','Me quedé sin aliento… y sin tubérculo','Este árbol lleva siglos aquí; yo, minutos, y ya duele','¡Tronco traidor, ahí estabas!','Me crucé con la historia viva del bosque 🌳');
+Q.jump.push('¡Hoy volaré más alto que un pájaro con sueño!','Newton, no mires esto','Me elevé tanto que vi mi propia sombra bajo mí','La gravedad perdió esta ronda','¡Salto épico de papa nivel dios!','Si tuviera alas, ya sería papa frita… voladora','Aterrizaré con estilo (o sin él)');
+Q.idle.push('El silencio también rueda… en mi cabeza','Una papa descansada es una papa peligrosa','¿Y si mejor soy puré con ambiciones?','Hago una pausa épica para mirar el horizonte','Estoy planeando mi próxima hazaña. Ya casi.','Con paciencia, hasta la papa se vuelve leyenda','Se oye el viento… y mi estómago, que es todo almidón','Mi destino no se rueda solo… o tal vez sí');
+Q.cactus.push('Pinchar a una papa es un delito de lesa cocina','Cactus, tú y yo no nos entendemos','Pica, pero me hace más fuerte (y más agujereada)','Ahora tengo cara de erizo 🌵');
+Q.snowman.push('Muñeco, te debía una zanahoria','Frío, pero el bonk fue cálido','Se derritió mi respeto por él');
+THOUGHTS.push('Si me cocinan, ¿sigo siendo yo?','Cada metro rodado es un capítulo de mi epopeya','El horizonte me llama… o quizá solo el hambre','Quizás el verdadero tesoro fue el almidón que hice en el camino','¿Y si el mundo gira para que yo ruede?','Una papa pequeña, un camino enorme','Nací bajo tierra y ahora veo el sol: eso es ascenso','Los héroes no se pelan, se hornean con gloria','Algún día escribirán canciones sobre mis tropiezos','¿Habrá otra papa soñando lo mismo que yo?');
+const NPC_PHRASES=['El que rueda, perdura 🥔','No juzgues a una papa por su cáscara','Dicen que el horno es solo un rumor','Yo una vez vi el mar. Era salado como mis lágrimas','Rueda despacio y llegarás... a donde sea','La gravedad es solo una sugerencia','Soy almidón, luego existo','El secreto es no dejar de rodar','Ayer me confundieron con una piedra. Hoy con un héroe','Mi abuela decía: nunca confíes en un cuchillo','Rueda como si nadie te estuviera mirando… excepto yo','Un camino largo comienza con un solo empujón','La pereza no existe; solo papas esperando su cuesta','Llevo aquí tanto tiempo que ya me brotan ideas','Escucha al viento: dice que sigas rodando','Soy pequeña, pero mi leyenda tiene raíces profundas'];
+let AC=null,muted=false,rollGain,rollFilter,hb=0,nextMile=1000,idleT=0;
 function initAudio(){if(AC)return;AC=new(window.AudioContext||window.webkitAudioContext)();
  const b=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
  const s=AC.createBufferSource();s.buffer=b;s.loop=true;rollFilter=AC.createBiquadFilter();rollFilter.type='lowpass';rollFilter.frequency.value=300;
@@ -111,7 +135,7 @@ const sfx={jump:()=>tone(220,.25,'sine',.25,700),land:()=>tone(110,.15,'sine',.3
  ach:()=>[523,659,784,1046,1318].forEach((f,i)=>setTimeout(()=>tone(f,.28,'triangle',.22),i*120)),
  dance:()=>[392,523,659,784,659,523,392].forEach((f,i)=>setTimeout(()=>tone(f,.16,'triangle',.22),i*140))};
 function say(a){toast(a[Math.random()*a.length|0]);sfx.squeak()}
-let tt;function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>e.style.opacity=0,1800)}
+let tt;function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop');clearTimeout(tt);tt=setTimeout(()=>e.style.opacity=0,Math.min(4800,1700+t.length*55))}
 
 // ===== logros inútiles =====
 const ACH=[
@@ -186,7 +210,7 @@ function togglePause(){setPaused(!paused)}
 function doDance(){if(!playing||paused||danceT>0)return;danceT=3;ach('baile');sfx.dance();toast('💃 ¡A BAILAR!');confetti()}
 
 function setMode(m){
-  mode=m;playing=true;paused=false;px=pz=0;vx=vz=vy=0;py=terrainHeight(0,0)+PR*.88;dist=bonks=0;nextMile=100;idleT=0;
+  mode=m;playing=true;paused=false;px=pz=0;vx=vz=vy=0;py=terrainHeight(0,0)+PR*.88;dist=bonks=0;nextMile=1000;idleT=0;
   day=1;dayT=0;realT=0;combo=0;comboT=0;shake=0;goldTime=0;goldT=rnd(45,60);if(goldMesh)disposeGold();goldMesh=null;
   thinkT=rnd(20,32);thinkOp=0;danceT=0;$('comboBig').style.opacity=0;$('pause').style.display='none';
   if(goldMesh){disposeGold()}
@@ -258,15 +282,25 @@ cv.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return
  if(ptrs.size===2){const q=[...ptrs.values()];p[0]=e.clientX;p[1]=e.clientY;const d=Math.hypot(q[0][0]-q[1][0],q[0][1]-q[1][1]);if(pd)camD=Math.max(5,Math.min(30,camD*pd/d));pd=d;return}
  camYaw-=(e.clientX-p[0])*.006;camPitch=Math.max(.12,Math.min(1.3,camPitch+(e.clientY-p[1])*.005));p[0]=e.clientX;p[1]=e.clientY});
 const pup=e=>{ptrs.delete(e.pointerId);pd=0};cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
-cv.addEventListener('wheel',e=>{camD=Math.max(5,Math.min(30,camD*(1+e.deltaY*.001)))});
+// Rueda del raton = pellizco de 2 dedos (acerca / aleja). Va en window porque con Pointer Lock el evento no llega al canvas.
+addEventListener('wheel',e=>{if(!playing||paused||e.ctrlKey)return;if(e.target.closest&&e.target.closest('#achPanel,#help'))return;
+ e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?33:e.deltaMode===2?400:1);camD=Math.max(5,Math.min(30,camD*Math.exp(Math.max(-300,Math.min(300,dy))*.0015)))},{passive:false});
 let last=performance.now(),fpsMin=0,gateT=0,fpsFrames=0,fpsClock=performance.now();
 // Limitador de fotogramas: devuelve true si se debe saltar este fotograma.
 function fpsGate(now){if(!fpsMin)return false;if(!gateT)gateT=now;
  if(now<gateT+fpsMin*.92-.2)return true;
  gateT+=fpsMin;if(now-gateT>fpsMin*2)gateT=now;return false}
+// Resolucion dinamica: si los fotogramas tardan mas de lo esperable baja la escala; si sobra potencia, la sube
+let drPrev=0,drAcc=0,drN=0,drT=0,drMin=1e9,drGood=0;
+function dynRes(now){const ft=now-drPrev;drPrev=now;if(!playing||paused||ft<=0||ft>250||world.quality==='bajo'){drAcc=0;drN=0;drT=0;return}
+ if(ft>3)drMin=Math.min(drMin,ft);drAcc+=ft;drN++;if(!drT)drT=now;if(now-drT<1500)return;
+ const avg=drAcc/drN,target=fpsMin||Math.min(drMin,16.7);drAcc=0;drN=0;drT=now;
+ if(avg>target*1.4&&resScale>.55){resScale=Math.max(.55,resScale-.1);drGood=0;applyPR()}
+ else if(avg<target*1.12&&resScale<1){if(++drGood>=3){resScale=Math.min(1,resScale+.05);drGood=0;applyPR()}}else drGood=0}
 function loop(now){
   requestAnimationFrame(loop);
   if(fpsGate(now))return;
+  dynRes(now);
   fpsFrames++;if(now-fpsClock>=500){const f=Math.round(fpsFrames*1000/(now-fpsClock));fpsFrames=0;fpsClock=now;if(!$('fpsMeter').hidden)$('fpsMeter').textContent=f+' FPS'}
   const dt=Math.min((now-last)/1000,.05);last=now;
   if(paused){if(mode!=='real')renderer.render(scene,camera);else renderer.clear();return}
@@ -299,7 +333,7 @@ function loop(now){
     // pensamientos existenciales
     thinkT-=dt;if(thinkT<=0){thinkT=rnd(25,45);showThought(THOUGHTS[Math.random()*THOUGHTS.length|0])}
     if(thinkOp>0){thinkOp=Math.max(0,thinkOp-dt/4);thinkS.material.opacity=Math.min(thinkOp,1)}
-    if(dist>nextMile){say(['¡'+nextMile+' metros! Mamá papa estaría orgullosa 🥔','¡'+nextMile+' metros rodados! Soy un atleta del almidón']);sfx.level();confetti();nextMile+=100}
+    if(dist>nextMile){{const km=nextMile/1000;say(MILES.map(f=>f(km)));sfx.level();confetti();nextMile+=1000}}
     if(sp<.3){idleT+=dt;if(idleT>8){say(mode==='real'?Q.real:Q.idle);idleT=0}}else idleT=0;
     if(mode==='real'){hb+=dt;if(hb>1.1){hb=0;tone(60,.15,'sine',.5,40);setTimeout(()=>tone(55,.12,'sine',.4,35),180)}realT+=dt;if(realT>=30)ach('real30')}
     if(dist>=1)ach('metro1');if(dist>=2&&grounded)ach('pasto');if(dist>=100)ach('milla100');if(bonks>=10)ach('bonks10');
