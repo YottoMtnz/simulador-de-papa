@@ -9,3 +9,12 @@
 @media(hover:hover) and (pointer:fine){#cam{display:none}}
 .mouse-look,.mouse-look canvas{cursor:none}
 .settings{flex-wrap:wrap;justify-content:center;max-width:560px}
+
+.system-row{display:flex;width:350px;max-width:100%;gap:12px;margin-top:12px}
+.system-row button,.settings .js-fs,.settings .js-fps{background:#182c2399;border:1px solid #e3e5c733;color:#d9dfc9;font-size:11px;padding:10px 10px;flex:1}
+.system-row button:hover{background:#435544}
+#fpsMeter{position:fixed;left:8px;top:8px;z-index:9;font:11px monospace;color:#d8ffb0;background:#0009;padding:3px 7px;border-radius:3px;pointer-events:none}
+#fpsMeter[hidden]{display:none}
+.native-android .js-fs{display:none!important}
+@media(max-height:600px){.system-row{margin-top:8px}.system-row button{padding:7px 8px;font-size:10px}}
+@media(max-height:430px){#menu{padding:12px 24px 10px}.menu-header{margin-bottom:0}.menu-content>.eyebrow{display:none}.menu-content h1{font-size:40px;margin:6px 0 10px;letter-spacing:-1.5px}.menu-footer{display:none}.play-button{padding:9px 16px}.alternate-modes{margin-top:7px}.alternate-modes button{padding-top:6px;padding-bottom:6px}.alternate-modes small{margin-top:3px}.moon-icon{top:11px}.system-row{margin-top:7px}.system-row button{padding:6px 8px}.menu-content{margin-top:0}#pause{gap:8px;padding:10px}#pause h2{font-size:26px;margin:0}#pause p,#pause small{display:none}.settings{gap:6px}.settings button{padding:7px 9px}}
