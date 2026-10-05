@@ -157,10 +157,48 @@ class World{
   }
   c+=(hash(gl_FragCoord.xy)-.5)/255.;
   gl_FragColor=vec4(c,1.);}`});this.sky=new T.Mesh(new T.SphereGeometry(420,48,24),this.skyMat);this.sky.frustumCulled=false;this.scene.add(this.sky);
- this.ridges=new T.Group();const rr=rng(525);for(let j=0;j<3;j++){const pos=[],cols=[],idx=[];const color=new T.Color([0x4f8f78,0x74a889,0xa3c492][j]);for(let k=0;k<=180;k++){const a=k/180*TAU,rad=180+j*65,h=8+Math.pow(noise(Math.cos(a)*4+j*4,Math.sin(a)*4-3),1.6)*(40+j*18);pos.push(Math.sin(a)*rad,-24,Math.cos(a)*rad,Math.sin(a)*rad,h,Math.cos(a)*rad);for(let q=0;q<2;q++)cols.push(color.r,color.g,color.b);if(k<180){const n=k*2;idx.push(n,n+1,n+2,n+1,n+3,n+2)}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(cols,3));g.setIndex(idx);const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide,fog:false}));this.ridges.add(m)}this.scene.add(this.ridges);
+ this.buildMountains();this.scene.add(this.ridges);
  this.stars=new T.Group();this.scene.add(this.stars);
  }
- configure(mode){const night=mode==='caos';this.scene.background=new T.Color(night?0x0b1430:0xeadfbb);this.scene.fog=new T.Fog(night?0x16264d:0xeadfbb,night?38:46,night?105:125);this.skyMat.uniforms.top.value.set(night?0x040a22:0x2c78c8);this.skyMat.uniforms.horizon.value.set(night?0x1d3366:0xeee3c0);this.skyMat.uniforms.night.value=night?1:0;this.stars.visible=false;this.sun.color.set(night?0xa9c4ff:0xffe4bd);this.sun.intensity=night?.7:1.9;this.hemi.color.set(night?0x6a8fe0:0xe6e4c8);this.hemi.groundColor.set(night?0x3a3350:0x7a6a45);this.hemi.intensity=night?.62:.85;this.ridges.children.forEach((m,i)=>m.material.color.set(night?0x4a63a0:0xffffff));this.renderer.toneMappingExposure=night?1.1:1.12;}
+ buildMountains(){
+  // Montanas 3D con relieve real (malla polar + normales) y texturas fotograficas de Poly Haven. La bruma usa el color de la niebla de la escena.
+  this.ridges=new T.Group();
+  const bands=[{r0:165,r1:245,peak:50,seed:3,rows:14,sc:34},{r0:250,r1:345,peak:92,seed:9,rows:14,sc:48},{r0:350,r1:450,peak:128,seed:17,rows:14,sc:64}];
+  const COLS=320,FLOOR=-26,sm=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
+  const rock=this.texture('rock_boulder_dry_diff'),rockN=this.texture('rock_boulder_dry_nor_gl',1,true),grass=this.texture('aerial_grass_rock_diff');
+  const fbm=(x,z,o)=>{let a=.5,f=1,s=0,n=0;for(let q=0;q<5;q++){s+=a*noise(x*f+o+q*17.3,z*f-o*1.7+q*9.1);n+=a;a*=.5;f*=2.07}return s/n};
+  bands.forEach((b,j)=>{
+    const pos=[],uv=[],mixv=[],haze=[],idx=[],ROWS=b.rows,hs=[];
+    const cols=[];
+    for(let r=0;r<=ROWS;r++){const t=r/ROWS,rad=b.r0+(b.r1-b.r0)*t;
+      for(let k=0;k<=COLS;k++){const a=k/COLS*TAU,x=Math.sin(a)*rad,z=Math.cos(a)*rad;
+        const nx=x*.0105,nz=z*.0105,base=fbm(nx,nz,b.seed),rid=1-Math.abs(2*fbm(nx*1.7+3.1,nz*1.7-1.3,b.seed+5)-1);
+        const mass=Math.pow(Math.max(0,base*1.25-.12),1.25),ridge=Math.pow(rid,2.1);
+        const env=Math.pow(Math.sin(Math.PI*Math.min(1,t*1.04)),.85);
+        const detail=(fbm(x*.045,z*.045,b.seed+11)-.5)*7;
+        let h=FLOOR+env*(b.peak*(.2+.5*mass+.55*ridge*mass)+detail*env+30)+(t<.04?-8:0);
+        h=Math.max(FLOOR,h);
+        pos.push(x,h,z);hs.push(h);
+        uv.push(a*rad/b.sc,(rad+h*.9)/b.sc);
+        haze.push(0);mixv.push(0);
+      }}
+    for(let r=0;r<ROWS;r++)for(let k=0;k<COLS;k++){const n=r*(COLS+1)+k,m=n+COLS+1;idx.push(n,m,n+1,n+1,m,m+1)}
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+    const nrm=g.attributes.normal;for(let r=0;r<=ROWS;r++){const a=r*(COLS+1),c=a+COLS;const nx=nrm.getX(a)+nrm.getX(c),ny=nrm.getY(a)+nrm.getY(c),nz=nrm.getZ(a)+nrm.getZ(c),l=Math.hypot(nx,ny,nz)||1;nrm.setXYZ(a,nx/l,ny/l,nz/l);nrm.setXYZ(c,nx/l,ny/l,nz/l)}
+    for(let q=0;q<hs.length;q++){const h=hs[q],ny=nrm.getY(q),alt=(h-FLOOR)/(b.peak+30);const rocky=sm(.55,.95,alt*1.1+(1-ny)*1.5);mixv[q]=rocky;
+      const rad=Math.hypot(pos[q*3],pos[q*3+2]);haze[q]=Math.min(.9,.16+.6*sm(165,450,rad)+.07*j-.2*sm(.3,1,alt))}
+    g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setAttribute('aRock',new T.Float32BufferAttribute(mixv,1));g.setAttribute('aHaze',new T.Float32BufferAttribute(haze,1));
+    const mat=new T.MeshStandardMaterial({map:rock,normalMap:rockN,normalScale:new T.Vector2(1.4,1.4),roughness:1,metalness:0,fog:true,side:T.FrontSide});
+    mat.onBeforeCompile=sh=>{sh.uniforms.map2={value:grass};
+      sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float aRock;attribute float aHaze;varying float vRock;varying float vHaze;').replace('#include <begin_vertex>','#include <begin_vertex>\nvRock=aRock;vHaze=aHaze;');
+      sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D map2;varying float vRock;varying float vHaze;')
+        .replace('#include <map_fragment>',`vec4 tA=texture2D(map,vUv),tB=texture2D(map2,vUv),tM=texture2D(map,vUv*.173+vec2(.37,.11));
+         vec4 texelColor=mix(tB*vec4(.62,.86,.44,1.),tA,vRock);texelColor.rgb*=.5+.85*dot(tM.rgb,vec3(.333));texelColor=mapTexelToLinear(texelColor);diffuseColor*=texelColor;`)
+        .replace('#include <fog_fragment>','#ifdef USE_FOG\ngl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,vHaze);\n#endif');};
+    const mesh=new T.Mesh(g,mat);mesh.frustumCulled=false;mesh.renderOrder=-1;this.ridges.add(mesh);
+  });
+ }
+ configure(mode){const night=mode==='caos';this.scene.background=new T.Color(night?0x0b1430:0xeadfbb);this.scene.fog=new T.Fog(night?0x16264d:0xeadfbb,night?38:46,night?105:125);this.skyMat.uniforms.top.value.set(night?0x040a22:0x2c78c8);this.skyMat.uniforms.horizon.value.set(night?0x1d3366:0xeee3c0);this.skyMat.uniforms.night.value=night?1:0;this.stars.visible=false;this.sun.color.set(night?0xa9c4ff:0xffe4bd);this.sun.intensity=night?.7:1.9;this.hemi.color.set(night?0x6a8fe0:0xe6e4c8);this.hemi.groundColor.set(night?0x3a3350:0x7a6a45);this.hemi.intensity=night?.62:.85;this.ridges.children.forEach(m=>m.material.color.set(night?0x9fb4e6:0xffffff));this.renderer.toneMappingExposure=night?1.1:1.12;}
  landmarks(){this.fixedProps=[];const g=new T.Group(),wood=this.trunkMat;const h=height(-15,-23);
  // Weathered orchard fence follows the terrain; every post is collidable.
  for(let k=0;k<9;k++){const x=-8-k*2.6,z=-13-k*.2,y=height(x,z),p=new T.Mesh(new T.BoxGeometry(.17,1.5,.18),wood);p.position.set(x,y+.63,z);p.rotation.z=Math.sin(k*12)*.06;p.castShadow=true;g.add(p);this.fixedProps.push({m:p,r:.18,kind:'tree',h:1.5,vx:0,vz:0});if(k<8)for(let j=0;j<2;j++){const bar=new T.Mesh(new T.BoxGeometry(2.7,.1,.09),wood);bar.position.set(x-1.3,y+.35+j*.57,z-.09);bar.rotation.z=.035;bar.castShadow=true;g.add(bar)}}
