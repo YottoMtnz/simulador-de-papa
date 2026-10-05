@@ -43,13 +43,13 @@ class World{
  const pineMap=this.texture('pine_tree_01_twig_diff'),pineAlpha=this.texture('pine_tree_01_twig_alpha',1,true);
  this.pineMat=new T.MeshStandardMaterial({map:pineMap,alphaMap:pineAlpha,alphaTest:.4,side:T.DoubleSide,roughness:1,vertexColors:true});this.wind(this.pineMat,.13,'leaf');
  this.pineDepth=new T.MeshDepthMaterial({map:pineMap,alphaMap:pineAlpha,alphaTest:.4,depthPacking:T.RGBADepthPacking,side:T.DoubleSide});this.wind(this.pineDepth,.13,'leaf');
- this.grassMat=new T.MeshStandardMaterial({color:0x919c54,roughness:1,side:T.DoubleSide,vertexColors:true});this.wind(this.grassMat,.22,'grass');
+ this.grassMat=new T.MeshStandardMaterial({color:0x7fa046,roughness:1,side:T.DoubleSide,vertexColors:true});this.wind(this.grassMat,.22,'grass');
  this.grassDepth=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,side:T.DoubleSide});this.wind(this.grassDepth,.22,'grass');
  this.flowerMat=new T.MeshStandardMaterial({color:0xe6dbae,roughness:.95,side:T.DoubleSide,vertexColors:true});this.wind(this.flowerMat,.15,'grass');
  const dirt=this.texture('forest_ground_04_diff'),dirtN=this.texture('forest_ground_04_nor_gl',1,true),grass=this.texture('aerial_grass_rock_diff'),grassN=this.texture('aerial_grass_rock_nor_gl',1,true);
  this.terrainMat=new T.MeshStandardMaterial({map:dirt,normalMap:dirtN,normalScale:new T.Vector2(.65,.65),roughness:1,vertexColors:true});
- this.terrainMat.onBeforeCompile=s=>{s.uniforms.naturalGrass={value:grass};s.uniforms.naturalGrassNormal={value:grassN};s.vertexShader='attribute float meadow; attribute vec2 climate; varying float vMeadow; varying vec2 vClimate;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMeadow=meadow;vClimate=climate;');s.fragmentShader='uniform sampler2D naturalGrass; uniform sampler2D naturalGrassNormal; varying float vMeadow;varying vec2 vClimate;\n'+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`vec4 soil=mapTexelToLinear(texture2D(map,vUv));vec4 sod=mapTexelToLinear(texture2D(naturalGrass,vUv*0.77));diffuseColor*=mix(soil,sod,clamp(vMeadow,0.,1.));diffuseColor.rgb=mix(diffuseColor.rgb,soil.rgb*vec3(1.32,1.14,.82)+vec3(.08,.055,.027),vClimate.y);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.68,.75,.79)*(.86+soil.r*.15),vClimate.x);`);s.fragmentShader=s.fragmentShader.replace('vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;','vec3 mapN = mix(texture2D(normalMap,vUv).xyz,texture2D(naturalGrassNormal,vUv*0.77).xyz,clamp(vMeadow,0.,1.))*2.0-1.0;')};
- this.terrainMat.customProgramCacheKey=()=> 'tierras-vivas-terrain-v1';
+ this.terrainMat.onBeforeCompile=s=>{s.uniforms.naturalGrass={value:grass};s.uniforms.naturalGrassNormal={value:grassN};s.vertexShader='attribute float meadow; attribute vec2 climate; varying float vMeadow; varying vec2 vClimate;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMeadow=meadow;vClimate=climate;');s.fragmentShader='uniform sampler2D naturalGrass; uniform sampler2D naturalGrassNormal; varying float vMeadow;varying vec2 vClimate;\n'+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`vec4 soil=mapTexelToLinear(texture2D(map,vUv));vec4 sod=mapTexelToLinear(texture2D(naturalGrass,vUv*0.77));diffuseColor*=mix(soil,sod,clamp(vMeadow,0.,1.));diffuseColor.rgb*=mix(vec3(1.),vec3(.76,1.16,1.04),clamp(vMeadow,0.,1.)*(1.-vClimate.y));diffuseColor.rgb=mix(diffuseColor.rgb,soil.rgb*vec3(1.32,1.14,.82)+vec3(.08,.055,.027),vClimate.y);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.68,.75,.79)*(.86+soil.r*.15),vClimate.x);`);s.fragmentShader=s.fragmentShader.replace('vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;','vec3 mapN = mix(texture2D(normalMap,vUv).xyz,texture2D(naturalGrassNormal,vUv*0.77).xyz,clamp(vMeadow,0.,1.))*2.0-1.0;')};
+ this.terrainMat.customProgramCacheKey=()=> 'tierras-vivas-terrain-v2';
  }
  wind(mat,amount,kind){mat.onBeforeCompile=s=>{s.uniforms.windTime=this.time;s.vertexShader='uniform float windTime;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>\nvec3 wp=position;\n#ifdef USE_INSTANCING\nwp=(instanceMatrix*vec4(position,1.0)).xyz;\n#endif\nfloat flex=${kind==='grass'?'pow(clamp(position.y,0.,1.5),1.6)':'clamp(position.y*.12,0.,1.)'};transformed.x+=sin(windTime*1.35+wp.x*.48+wp.z*.28)*flex*${amount};transformed.z+=cos(windTime*.85+wp.z*.38)*flex*${amount*.6};`)};mat.customProgramCacheKey=()=> 'wind-'+kind+amount}
  treeTemplate(type,variant){const rr=rng(137+variant*719+type*83),trunks=[],leaves=[];const tall=type===1?11:8.5;const lean=(rr()-.5)*1.1;
@@ -95,13 +95,72 @@ class World{
  const y=height(x,z);this.sun.position.set(x+38,y+34,z-32);this.sun.target.position.set(x,y,z);this.sky.position.set(x,y,z);this.ridges.position.set(x,0,z);this.stars.position.set(x,y,z);
  }
  initSky(){
- this.skyMat=new T.ShaderMaterial({side:T.BackSide,depthWrite:false,uniforms:{top:{value:new T.Color(0x598895)},horizon:{value:new T.Color(0xe8d9a9)},night:{value:0}},vertexShader:'varying vec3 vDir;void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:`varying vec3 vDir;uniform vec3 top;uniform vec3 horizon;uniform float night;
- float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fb(vec2 p){return noise(p)*.53+noise(p*2.02)*.27+noise(p*4.1)*.13+noise(p*8.2)*.07;}
- void main(){vec3 d=normalize(vDir);float t=pow(max(0.,d.y),.55);vec3 c=mix(horizon,top,t);vec3 sun=normalize(vec3(.62,.39,-.55));float s=max(dot(d,sun),0.);c+=vec3(1.,.74,.36)*pow(s,24.)*.16*(1.-night);c+=vec3(1.,.88,.65)*pow(s,1800.)*1.6*(1.-night);if(d.y>.04){vec2 uv=d.xz/(d.y+.22)*2.1;float cloud=smoothstep(.57,.76,fb(uv))*smoothstep(.05,.3,d.y);c=mix(c,vec3(.93,.9,.79),cloud*.67*(1.-night));}gl_FragColor=vec4(c,1.);}`});this.sky=new T.Mesh(new T.SphereGeometry(420,32,16),this.skyMat);this.sky.frustumCulled=false;this.scene.add(this.sky);
- this.ridges=new T.Group();const rr=rng(525);for(let j=0;j<3;j++){const pos=[],cols=[],idx=[];const color=new T.Color([0x738a80,0x8e9b89,0xafb4a0][j]);for(let k=0;k<=180;k++){const a=k/180*TAU,rad=180+j*65,h=8+Math.pow(noise(Math.cos(a)*4+j*4,Math.sin(a)*4-3),1.6)*(40+j*18);pos.push(Math.sin(a)*rad,-24,Math.cos(a)*rad,Math.sin(a)*rad,h,Math.cos(a)*rad);for(let q=0;q<2;q++)cols.push(color.r,color.g,color.b);if(k<180){const n=k*2;idx.push(n,n+1,n+2,n+1,n+3,n+2)}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(cols,3));g.setIndex(idx);const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide,fog:false}));this.ridges.add(m)}this.scene.add(this.ridges);
- const pts=[];for(let i=0;i<280;i++)pts.push(new T.Vector3(rr()-.5,rr()*.7+.1,rr()-.5).normalize().multiplyScalar(360));this.stars=new T.Points(new T.BufferGeometry().setFromPoints(pts),new T.PointsMaterial({size:1.2,sizeAttenuation:false,color:0xc1d4eb,fog:false}));this.scene.add(this.stars);
+ this.skyMat=new T.ShaderMaterial({side:T.BackSide,depthWrite:false,uniforms:{top:{value:new T.Color(0x2c78c8)},horizon:{value:new T.Color(0xeee3c0)},night:{value:0},time:this.time,sunDir:{value:new T.Vector3(38,34,-32).normalize()}},vertexShader:'varying vec3 vDir;void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:`varying vec3 vDir;uniform vec3 top;uniform vec3 horizon;uniform float night;uniform float time;uniform vec3 sunDir;
+ float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+ float hash3(vec3 p){p=fract(p*vec3(.1031,.1030,.0973));p+=dot(p,p.yxz+33.33);return fract((p.x+p.y)*p.z);}
+ vec3 hash33(vec3 p){return vec3(hash3(p),hash3(p+19.19),hash3(p+47.7));}
+ float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+ float fb(vec2 p){return noise(p)*.53+noise(p*2.02)*.27+noise(p*4.1)*.13+noise(p*8.2)*.07;}
+ vec3 starLayer(vec3 d,float sc,float thr,float r,float bright,float seed){
+  vec3 p=d*sc,id=floor(p),f=fract(p);float h=hash3(id+seed);
+  if(h<thr)return vec3(0.);
+  vec3 sp=.2+.6*hash33(id+seed*3.1);float dd=length(f-sp);
+  float tw=.78+.22*sin(time*(1.2+h*3.)+h*60.);
+  float m=smoothstep(r,0.,dd)*(.35+.65*hash3(id+seed*7.))*bright*tw;
+  vec3 col=mix(vec3(.62,.76,1.),vec3(1.,.9,.74),hash3(id.zxy+seed));
+  return col*m;}
+ void main(){
+  vec3 d=normalize(vDir);float s=dot(d,sunDir);float sp=max(s,0.);
+  float up=clamp(d.y,0.,1.);
+  vec3 c=mix(horizon,top,pow(up,.42));
+  // nubes (cobertura moderada, borde iluminado hacia el sol, deriva lenta)
+  float cov=0.,lit=0.;
+  if(d.y>.02){
+   vec2 uv=d.xz/(d.y+.25)*1.7+vec2(time*.004,time*.0016);
+   float nn=fb(uv),n2=fb(uv+normalize(sunDir.xz+1e-4)*.07);
+   cov=smoothstep(.54,.78,nn)*smoothstep(.02,.2,d.y);
+   lit=clamp(.55+(nn-n2)*5.,0.,1.);}
+  if(night<.5){
+   // DIA: halo calido, disco solar y calidez en el horizonte del lado del sol
+   c+=vec3(1.,.74,.42)*pow(sp,6.)*.20;
+   c+=vec3(1.,.82,.52)*pow(sp,48.)*.35;
+   c+=vec3(.28,.13,.02)*exp(-d.y*7.)*pow(sp,2.5);
+   c+=vec3(1.,.96,.82)*pow(sp,420.)*.7;
+   c=mix(c,vec3(1.,.97,.86)*1.6,smoothstep(.99982,.99988,s));
+   vec3 cc=mix(vec3(.60,.67,.80),vec3(1.,.97,.91),lit);
+   cc+=vec3(1.,.72,.42)*pow(sp,5.)*.28*lit;
+   c=mix(c,cc,cov*.78);
+  }else{
+   // NOCHE: estrellas de varios brillos, via lactea suave y luna con maria
+   float horizonFade=smoothstep(.0,.28,d.y);
+   float moonNear=1.-smoothstep(.97,.9985,s)*.92;
+   vec3 st=starLayer(d,46.,.87,.25,1.9,1.)+starLayer(d,105.,.87,.23,1.3,2.)+starLayer(d,230.,.90,.21,1.0,3.);
+   vec3 gn=normalize(vec3(.35,.82,.45));float gd=abs(dot(d,gn));
+   float band=exp(-gd*gd*22.);
+   float mwTex=.35+.65*fb(vec2(atan(d.z,d.x)*3.,dot(d,gn)*9.)+4.);
+   vec3 mw=mix(vec3(.10,.12,.26),vec3(.40,.34,.42),mwTex)*band*mwTex*.5;
+   st+=starLayer(d,420.,.80,.24,.9,5.)*band*1.6;
+   float veil=1.-cov*.8;
+   c+=(st+mw)*horizonFade*moonNear*veil;
+   // luna
+   vec3 tg=normalize(cross(sunDir,vec3(0.,1.,0.))),bt=cross(tg,sunDir);
+   vec2 mu=vec2(dot(d,tg),dot(d,bt))/.036;float r2=length(mu);
+   float disc=smoothstep(1.02,.97,r2)*step(0.,s);
+   float zz=sqrt(max(0.,1.-r2*r2));
+   float maria=mix(.74,1.,smoothstep(.38,.62,fb(mu*1.7+vec2(4.,2.))));
+   float crater=.94+.06*noise(mu*14.);
+   vec3 moon=vec3(.94,.95,.9)*maria*crater*(.62+.38*zz)*1.15;
+   c+=vec3(.35,.5,.95)*pow(sp,70.)*.28+vec3(.25,.35,.7)*pow(sp,9.)*.07;
+   c=mix(c,moon,disc);
+   vec3 cn=vec3(.10,.13,.24)+vec3(.35,.4,.55)*pow(sp,18.)*lit;
+   c=mix(c,cn,cov*.45);
+  }
+  c+=(hash(gl_FragCoord.xy)-.5)/255.;
+  gl_FragColor=vec4(c,1.);}`});this.sky=new T.Mesh(new T.SphereGeometry(420,48,24),this.skyMat);this.sky.frustumCulled=false;this.scene.add(this.sky);
+ this.ridges=new T.Group();const rr=rng(525);for(let j=0;j<3;j++){const pos=[],cols=[],idx=[];const color=new T.Color([0x4f8f78,0x74a889,0xa3c492][j]);for(let k=0;k<=180;k++){const a=k/180*TAU,rad=180+j*65,h=8+Math.pow(noise(Math.cos(a)*4+j*4,Math.sin(a)*4-3),1.6)*(40+j*18);pos.push(Math.sin(a)*rad,-24,Math.cos(a)*rad,Math.sin(a)*rad,h,Math.cos(a)*rad);for(let q=0;q<2;q++)cols.push(color.r,color.g,color.b);if(k<180){const n=k*2;idx.push(n,n+1,n+2,n+1,n+3,n+2)}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(cols,3));g.setIndex(idx);const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide,fog:false}));this.ridges.add(m)}this.scene.add(this.ridges);
+ this.stars=new T.Group();this.scene.add(this.stars);
  }
- configure(mode){const night=mode==='caos';this.scene.background=new T.Color(night?0x1b293d:0xc1c9ac);this.scene.fog=new T.Fog(night?0x26374b:0xc1c9ac,38,105);this.skyMat.uniforms.top.value.set(night?0x111d37:0x5f8f9d);this.skyMat.uniforms.horizon.value.set(night?0x3c5066:0xe7dcb8);this.skyMat.uniforms.night.value=night?1:0;this.stars.visible=night;this.sun.color.set(night?0xb4c9ed:0xffe5b1);this.sun.intensity=night?.58:1.8;this.hemi.color.set(night?0x708fb5:0xa9c7cf);this.hemi.groundColor.set(night?0x33322b:0x756340);this.hemi.intensity=night?.55:.8;this.ridges.children.forEach((m,i)=>m.material.color.set(night?0x3e506e:0xffffff));this.renderer.toneMappingExposure=night?1.08:1.04;}
+ configure(mode){const night=mode==='caos';this.scene.background=new T.Color(night?0x0b1430:0xeadfbb);this.scene.fog=new T.Fog(night?0x16264d:0xeadfbb,night?38:46,night?105:125);this.skyMat.uniforms.top.value.set(night?0x040a22:0x2c78c8);this.skyMat.uniforms.horizon.value.set(night?0x1d3366:0xeee3c0);this.skyMat.uniforms.night.value=night?1:0;this.stars.visible=false;this.sun.color.set(night?0xa9c4ff:0xffe4bd);this.sun.intensity=night?.7:1.9;this.hemi.color.set(night?0x6a8fe0:0xe6e4c8);this.hemi.groundColor.set(night?0x3a3350:0x7a6a45);this.hemi.intensity=night?.62:.85;this.ridges.children.forEach((m,i)=>m.material.color.set(night?0x4a63a0:0xffffff));this.renderer.toneMappingExposure=night?1.1:1.12;}
  landmarks(){this.fixedProps=[];const g=new T.Group(),wood=this.trunkMat;const h=height(-15,-23);
  // Weathered orchard fence follows the terrain; every post is collidable.
  for(let k=0;k<9;k++){const x=-8-k*2.6,z=-13-k*.2,y=height(x,z),p=new T.Mesh(new T.BoxGeometry(.17,1.5,.18),wood);p.position.set(x,y+.63,z);p.rotation.z=Math.sin(k*12)*.06;p.castShadow=true;g.add(p);this.fixedProps.push({m:p,r:.18,kind:'tree',h:1.5,vx:0,vz:0});if(k<8)for(let j=0;j<2;j++){const bar=new T.Mesh(new T.BoxGeometry(2.7,.1,.09),wood);bar.position.set(x-1.3,y+.35+j*.57,z-.09);bar.rotation.z=.035;bar.castShadow=true;g.add(bar)}}
@@ -111,7 +170,7 @@ class World{
  const post=new T.Mesh(new T.BoxGeometry(.16,2.4,.17),wood);post.position.set(-4,height(-4,-5)+1.1,-5);post.castShadow=true;g.add(post);const sign=new T.Mesh(new T.BoxGeometry(2.7,.7,.1),[wood,wood,wood,wood,new T.MeshStandardMaterial({map:signTex,roughness:1}),wood]);sign.position.set(-4,height(-4,-5)+1.95,-5);sign.rotation.y=.12;sign.castShadow=true;g.add(sign);this.fixedProps.push({m:post,r:.2,kind:'tree',h:2.5,vx:0,vz:0});
  this.scene.add(g);this.landmarkGroup=g;
  }
- setQuality(q){this.quality=q;try{localStorage.setItem('papa_quality',q)}catch(e){}this.renderer.setPixelRatio(Math.min(devicePixelRatio,q==='bajo'?1:1.65));this.sun.shadow.mapSize.set(q==='bajo'?1024:2048,q==='bajo'?1024:2048);if(this.sun.shadow.map){this.sun.shadow.map.dispose();this.sun.shadow.map=null}this.reset()}
+ setQuality(q){this.quality=q;try{localStorage.setItem('papa_quality',q)}catch(e){}const big=matchMedia('(pointer:fine)').matches&&Math.max(screen.width,screen.height)*(devicePixelRatio||1)>=2500,sm=q==='bajo'?1024:big?4096:2048;if(this.onQuality)this.onQuality(q);this.sun.shadow.mapSize.set(sm,sm);if(this.sun.shadow.map){this.sun.shadow.map.dispose();this.sun.shadow.map=null}this.reset()}
 }
 function localStorageSafe(k){try{return localStorage.getItem(k)}catch(e){return null}}
 window.Nature={World,height,biome,pathDist,rng,noise,merge};
