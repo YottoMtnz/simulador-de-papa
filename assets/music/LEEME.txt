@@ -1,0 +1,13 @@
+BANDA SONORA
+============
+Pon aqui tus melodias con estos nombres exactos:
+
+    1.mp3  2.mp3  3.mp3  ...  20.mp3
+
+- No hace falta que esten las 20: suenan solo las que existan (puedes poner 1, 5 o 20).
+- Se reproducen una tras otra en orden aleatorio, sin repetir hasta haberlas sonado todas, y vuelven a empezar sin parar.
+- Con una sola pista, esa pista se repite en bucle.
+- Cada pista entra y sale con un fundido suave. En pausa el volumen baja; el boton de sonido (o la tecla M) la silencia.
+- En la pausa, el boton "Musica" cambia el volumen: alta / media / baja / apagada (se guarda).
+- Formato: MP3. Recomendado 128-192 kbps; el juego carga una pista cada vez, asi que el peso total solo afecta al tamano de la descarga.
+
