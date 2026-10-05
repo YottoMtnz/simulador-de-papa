@@ -44,10 +44,14 @@ Rueda, salta, empuja calabazas y cuestiona tu existencia por colinas, senderos, 
 
 El menú principal y la pausa tienen *Pantalla completa*. En el navegador no se puede superar la frecuencia del monitor.
 
+## 🎵 Música
+
+El juego incluye banda sonora: 20 pistas que suenan en orden aleatorio con fundido suave. El botón "Música" en la pausa cambia el volumen (alta / media / baja / apagada).
+
 ## 📁 Archivos
 
 - `juego.html` — el juego
-- `assets/` — estilos, lógica del juego, texturas y Three.js (todo local, funciona sin internet)
+- `assets/` — estilos, lógica del juego, música, texturas y Three.js (todo local, funciona sin internet)
 - `capturas/` — imágenes del juego
 - `CREDITOS.md` — licencias y procedencia de materiales
 
@@ -55,6 +59,7 @@ El menú principal y la pausa tienen *Pantalla completa*. En el navegador no se 
 
 - [Three.js](https://threejs.org/) r128
 - Sonido procedural con Web Audio API
+- Banda sonora propia: `assets/music/1.mp3` … `20.mp3` (ver `assets/music/LEEME.txt`)
 - Cero dependencias de build — solo abre el enlace y juega
 
 ## 📜 Licencia
