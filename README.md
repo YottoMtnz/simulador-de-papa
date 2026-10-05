@@ -1,12 +1,12 @@
 # 🥔 Simulador de Papa · Tierras Vivas
 
-**El juego más almidonado del internet — ahora con un mundo vivo.**
+**El juego más almidonado del internet.**
 
 Rueda, salta, empuja calabazas y cuestiona tu existencia por colinas, senderos, bosques y desiertos en este simulador 3D que nadie pidió pero todos necesitaban.
 
 🎮 **[Jugar ahora](https://yottomtnz.github.io/simulador-de-papa/)** — gratis, sin instalación, en tu navegador (PC y móvil).
 
-## ✨ Novedades de Tierras Vivas
+## ✨ Características
 
 - 🌄 Terreno continuo con colinas, desniveles y un sendero sinuoso
 - 🌲 Árboles con raíces, troncos curvos y follaje con viento suave
