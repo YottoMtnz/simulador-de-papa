@@ -1,0 +1,22 @@
+{
+  "CREDITOS.md": "269dc04d53e5093b3db0213f27e2716987d938b441f2477709e76920ba5b231e",
+  "HANDOFF_AI.md": "683bf54eacd9eb6048571ed3eb6537ea8a39ab5a56e1e334e87227ae3a35920a",
+  "JUGAR.bat": "99be29158082d50bb5a79f75fd06e5e732b9ce19b7685fc022a2d8a6b0336cf6",
+  "LICENSE": "08f2e84e2a4396094d675f56bfacd9857552624afd43abd82fe503c0e0bd5e8c",
+  "README.md": "a416ebf146baf1931a47aa4fbc5d3a90df48643f72bd4937e4b9a7ff14bec02c",
+  "VALIDACION.md": "19d17e34fc31cbeb03c3cb1e02d7075da09c6de830b5c180378a37809d30144c",
+  "assets/css/game.css": "de47658274c0623d63b88747dcb192fba2df8706356c7ef0b419042113946f52",
+  "assets/js/game.js": "7ee2dc041315454251f4a9323eb9cba2841e926b960a33b0b6c4164a74003eaa",
+  "assets/js/nature.js": "a279c34ad7077f6ec3e04c1be0b23961d0729216b556209ce2ae79c491ba87e6",
+  "assets/js/textures.js": "c0c5a4290ae0c46d06053a621dc1b54521f949de86f1dad24ea82d5aa8e01490",
+  "assets/vendor/three.min.js": "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2",
+  "capturas/campo.png": "001e230e489e338672f0aa9c69f85726b582c6461751273fb3214e23fa7cf49a",
+  "capturas/menu.png": "50c75f3932b19df257e8e3f828a7dcc39d4eced76c666f8ad07d752c9eba84e4",
+  "capturas/menu_movil.png": "f756dfd98e7dcd45378b3d1fd5db5335d1242edc8c7662ea88eb9d3260fc9081",
+  "capturas/movil.png": "9638783d67cb0ba0e7a045e02c941f443f4f0d65e267087980fb14cd80323c2d",
+  "capturas/noche.png": "ce083b1507024f4e0309dbfa6d659ddf6367a8443a33e0b519015a6a087dd14d",
+  "index.html": "4e8b6eed3473c7fbdff07336f59ae9304dc67315a8d7c6bf24aed95efb1dc551",
+  "juego.html": "66b46ade6db8f05a5954577bf462de22ef96520f7217c666849119b5c85a4ea7",
+  "pruebas/resultados_finales.json": "1d516533aececb64782de2e77dcf7cec635ca4877c576e6c3a2eade5ebac3c15",
+  "pruebas/resultados_pc.json": "3c61e2ebb6c6e1d48d9ca9544bed4d94b6ccee7dc24aacc02fda6d6e48743f0f"
+}
