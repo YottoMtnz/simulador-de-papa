@@ -36,7 +36,7 @@ const PR=1,potato=new THREE.Group(),body=new THREE.Group();potato.add(body);
 {const g=new THREE.SphereGeometry(PR,64,48),p=g.attributes.position,v=new THREE.Vector3();
  for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const d=1+.075*Math.sin(v.x*3+1)*Math.cos(v.y*4)+.04*Math.sin(v.z*5+v.x*2)+.012*Math.sin(v.x*9)*Math.sin(v.z*8);v.multiplyScalar(d);v.x*=1.25;v.y*=.88;p.setXYZ(i,v.x,v.y,v.z)}
  g.computeVertexNormals();
- const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:skinT,bumpMap:skinT,bumpScale:.045,roughness:.93}));m.castShadow=true;body.add(m);
+ const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:skinT,normalMap:world.skinN,normalScale:new THREE.Vector2(.7,.7),bumpMap:skinT,bumpScale:.03,roughness:.9}));m.castShadow=true;body.add(m);
 }
 scene.add(potato);
 const bodyMat=()=>potato.children[0].children[0].material;
