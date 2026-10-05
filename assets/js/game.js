@@ -1,9 +1,6 @@
 
 const $=id=>document.getElementById(id);
 function rnd(a,b){return a+Math.random()*(b-a)}
-// Color vivo: ACES apaga los colores, asi que tras el tone mapping se sube la saturacion y se calienta un poco
-THREE.ShaderChunk.tonemapping_fragment=THREE.ShaderChunk.tonemapping_fragment.replace('gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );',
- 'gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );\n\tgl_FragColor.rgb = max( mix( vec3( dot( gl_FragColor.rgb, vec3( .2126, .7152, .0722 ) ) ), gl_FragColor.rgb, 1.22 ) * vec3( 1.01, 1., .99 ), 0. );');
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -33,11 +30,7 @@ function resetWorld(){world.reset();ACT=world.props}
 function updateWorld(dt){world.update(px,pz,dt);ACT=world.props}
 // papa
 const PR=1,potato=new THREE.Group(),body=new THREE.Group();potato.add(body);
-{const g=new THREE.SphereGeometry(PR,64,48),p=g.attributes.position,v=new THREE.Vector3();
- for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const d=1+.075*Math.sin(v.x*3+1)*Math.cos(v.y*4)+.04*Math.sin(v.z*5+v.x*2)+.012*Math.sin(v.x*9)*Math.sin(v.z*8);v.multiplyScalar(d);v.x*=1.25;v.y*=.88;p.setXYZ(i,v.x,v.y,v.z)}
- g.computeVertexNormals();
- const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:skinT,normalMap:world.skinN,normalScale:new THREE.Vector2(.7,.7),bumpMap:skinT,bumpScale:.03,roughness:.9}));m.castShadow=true;body.add(m);
-}
+body.add(world.makePotato());
 scene.add(potato);
 const bodyMat=()=>potato.children[0].children[0].material;
 function updateGoldTint(){const m=bodyMat();if(goldTime>0){m.color.set(0xffd24a);m.emissive.set(0x7a5200)}else{m.color.set(0xffffff);m.emissive.set(0x000000)}}
@@ -105,7 +98,7 @@ const Q={
  tree:['¡Le di un abrazo a un árbol! 🌲','El árbol ni se inmutó','Soy papa, tú eres árbol. Respeto.','¡Auch, mis raíces!','Esto es un atentado contra mi almidón'],
  jump:['¡Boing! 🦘','Las papas SÍ vuelan (un ratito)','¡Hasta la luna! …bueno, hasta el aire','Wiiiii 🥔','Tuve un momento de gloria'],
  idle:['¿Seguimos o qué? 🥔','Me estoy enfriando…','Pensando en puré…','Un día sin rodar es un día sin papa','No pienses en papas fritas, no pienses…'],
- real:['Algo me golpeó. No sé qué. No tengo ojos 🖤','Eso estuvo duro. ¿Una roca? ¿Mi destino?','Todo es oscuridad y yo ruedo','Oigo mi corazón de almidón 💓']};
+ real:['Algo me golpeó. No sé qué. ¿De dónde vino? 🖤','Eso estuvo duro. ¿Una roca? ¿Mi destino?','Todo es oscuridad y yo ruedo','Oigo mi corazón de almidón 💓']};
 Q.cactus=['¡Ay! Pica pica 🌵','Abracé un cactus. Mala idea.','Ahora soy una papa con espinas'];Q.snowman=['¡Decapité a Olaf! ⛄','El muñeco de nieve se quedó helado','Perdón, amigo de nieve'];
 const THOUGHTS=['¿Soy papa o la papa es yo?','El puré es solo papa que se rindió','Si ruedo en el bosque y nadie me ve... ¿hice ruido?','Mi destino es el horno, pero hoy ruedo','¿Las papas fritas son canibalismo?','El almidón fluye a través de mí','Tal vez el suelo también sueña con ser papa','Rodar es la respuesta. ¿Cuál era la pregunta?'];
 // Hitos: solo cada 1000 m (1 km, 2 km...)
@@ -175,7 +168,7 @@ function hitColor(p){return p.kind==='pump'?(p.q==='coco'?0x8a5a2b:0xe0701a):p.k
 // ===== papa dorada (power-up) =====
 function spawnGold(){if(goldMesh)disposeGold();
  goldMesh=new THREE.Group();
- const m=new THREE.Mesh(new THREE.SphereGeometry(.8,24,18),new THREE.MeshStandardMaterial({color:0xffd24a,emissive:0x8a5a00,emissiveIntensity:.9,metalness:.7,roughness:.25}));
+ const m=new THREE.Mesh(world.potatoGeo.clone(),new THREE.MeshStandardMaterial({color:0xffd24a,emissive:0x8a5a00,emissiveIntensity:.9,metalness:.7,roughness:.25}));
  m.castShadow=true;goldMesh.add(m);
  const l=new THREE.PointLight(0xffd24a,1.2,12);l.position.y=2;goldMesh.add(l);
  const s=textSprite('Papa dorada',34,'#ffd24a');s.position.y=2.4;goldMesh.add(s);
@@ -184,14 +177,7 @@ function spawnGold(){if(goldMesh)disposeGold();
 
 // ===== papas NPC =====
 const NPCS=[];
-function spawnNPCs(){for(const n of NPCS){scene.remove(n.g);n.g.children[0].children[0].material.dispose();const t=n.g.children[1].material;t.map.dispose();t.dispose()}NPCS.length=0;
- const names=['Kevin','Puré','Señor Almidón','La Papa Sabia','Tubérculo','Papatouille'];
- for(let i=0;i<3;i++){const name=names.splice(Math.random()*names.length|0,1)[0];
-  const g=new THREE.Group();const b=body.clone();b.scale.setScalar(.8);
-  b.children[0].material=body.children[0].material.clone();g.add(b);
-  const s=textSprite(name,32);s.position.y=2.4;g.add(s);
-  const a=rnd(0,6.28),d=rnd(12,28);g.position.set(px+Math.cos(a)*d,PR*.88,pz+Math.sin(a)*d);
-  scene.add(g);NPCS.push({g:g,name:name,a:rnd(0,6.28),t:rnd(2,5),cd:0})}}
+function spawnNPCs(){for(const n of NPCS){scene.remove(n.g);n.g.children[0].traverse(o=>{if(o.userData.ownedGeometry&&o.geometry)o.geometry.dispose();if(o.material&&o.userData.ownedMaterial)o.material.dispose()});const t=n.g.children[1].material;t.map.dispose();t.dispose()}NPCS.length=0;const variants=[['Puré',0xdac18f,.84,1.03],['La Papa Sabia',0xbb9c73,1.05,.86],['Papatouille',0xcaa087,.72,1.2],['Señor Almidón',0xe0d2ad,.94,1.04],['Batata',0xdda3a1,.68,1.3],['Tubérculo',0xcab285,.8,.85]];for(let i=0;i<6;i++){const v=variants[i],g=new THREE.Group(),b=new THREE.Group(),m=world.makePotato(v[1]);m.scale.set(v[2],v[3]*.78,v[2]);m.userData.ownedMaterial=true;b.add(m);g.add(b);if(i===1||i===5)for(let k=0;k<3;k++){const leaf=new THREE.Mesh(new THREE.SphereGeometry(.16,10,6),new THREE.MeshStandardMaterial({color:0x758e36,roughness:1}));leaf.scale.set(.4,1.6,.6);leaf.position.set((k-1)*.17,.65,.08);leaf.rotation.z=(k-1)*-.45;leaf.userData.ownedGeometry=leaf.userData.ownedMaterial=true;b.add(leaf)}if(i===2||i===3){const hat=new THREE.Mesh(new THREE.CylinderGeometry(i===2?.48:.28,.58,.25,24),world.woodMat);hat.position.y=.72;hat.userData.ownedGeometry=true;b.add(hat)}const label=textSprite(v[0],32);label.position.y=2.2;g.add(label);const a=i/6*Math.PI*2+.35,d=15+(i%2)*10;g.position.set(px+Math.cos(a)*d,PR*.88,pz+Math.sin(a)*d);scene.add(g);NPCS.push({g,name:v[0],a:rnd(0,6.28),t:rnd(2,5),cd:0})}}
 
 // ===== Rocoso, la roca mascota =====
 let rocoso=null,rocFarT=0;const ROC_R=.7,ROC_FOLLOW=4;
@@ -210,6 +196,7 @@ function togglePause(){setPaused(!paused)}
 function doDance(){if(!playing||paused||danceT>0)return;danceT=3;ach('baile');sfx.dance();toast('💃 ¡A BAILAR!');confetti()}
 
 function setMode(m){
+  if(window.Adventure&&playing)Adventure.save();
   mode=m;playing=true;paused=false;px=pz=0;vx=vz=vy=0;py=terrainHeight(0,0)+PR*.88;dist=bonks=0;nextMile=1000;idleT=0;
   day=1;dayT=0;realT=0;combo=0;comboT=0;shake=0;goldTime=0;goldT=rnd(45,60);if(goldMesh)disposeGold();goldMesh=null;
   thinkT=rnd(20,32);thinkOp=0;danceT=0;$('comboBig').style.opacity=0;$('pause').style.display='none';
@@ -217,15 +204,16 @@ function setMode(m){
   updateGoldTint();spawnNPCs();spawnRocoso();renderAch();
   initAudio();if(AC.state==='suspended')AC.resume();if(window.Music)Music.start();
   $('menu').style.display='none';document.body.classList.add('playing');document.body.classList.remove('is-photo');photoMode=false;$('photoExit').hidden=true;$('achPanel').classList.remove('open');camYaw=0;camPitch=.34;camD=12.6;camFocus.set(0,py,0);camera.position.set(0,py+5,13);camera.lookAt(0,py+1,0);world.configure(m);G=m==='caos'?7:28;for(const k in keys)keys[k]=0;jx=jz=0;wantJump=false;
-  if(m==='real'){renderer.domElement.style.visibility='hidden';scene.background=new THREE.Color(0);toast('Modo realista: no ves nada. Las papas no tienen ojos 👁️🚫');setTimeout(()=>toast('Pero sigues rodando. Se siente… algo.'),3500)}
+  if(m==='real'){renderer.domElement.style.visibility='hidden';scene.background=new THREE.Color(0);toast('Escucha. El camino sigue ahí.');setTimeout(()=>toast('Pero sigues rodando. Se siente… algo.'),3500)}
   else{renderer.domElement.style.visibility='visible'}
   if(m==='huerto')toast('Sigue el sendero. El campo es tuyo.');
   if(m==='caos')toast('Bajo la luna, todo pesa un poco menos.');
   resetWorld();
+  if(window.Adventure){Adventure.restore(m);spawnNPCs();spawnRocoso();}
   lockMouse();
 }
 document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
-$('back').onclick=()=>{if(window.Music)Music.stop();unlockMouse();playing=false;paused=false;$('pause').style.display='none';if(rollGain)rollGain.gain.value=0;$('menu').style.display='flex';document.body.classList.remove('playing','is-photo');renderer.domElement.style.visibility='visible';mode=null;world.configure('huerto');photoMode=false;$('photoExit').hidden=true;$('achPanel').classList.remove('open')};
+$('back').onclick=()=>{if(window.Adventure){Adventure.save();Adventure.close();}if(window.Music)Music.stop();unlockMouse();playing=false;paused=false;$('pause').style.display='none';if(rollGain)rollGain.gain.value=0;$('menu').style.display='flex';document.body.classList.remove('playing','is-photo');renderer.domElement.style.visibility='visible';mode=null;world.configure('huerto');photoMode=false;$('photoExit').hidden=true;$('achPanel').classList.remove('open')};
 $('mute').onclick=()=>{muted=!muted;if(window.Music)Music.setMuted(muted);$('mute').classList.toggle('muted',muted);$('mute').setAttribute('aria-label',muted?'Activar sonido':'Silenciar sonido');if(rollGain)rollGain.gain.value=0};
 $('achBtn').onclick=()=>toggleAch();
 $('pauseBtn').onclick=()=>togglePause();
@@ -266,7 +254,7 @@ function unlockMouse(){if(lockActive())document.exitPointerLock()}
 document.addEventListener('pointerlockchange',()=>{
  if(lockActive()){document.body.classList.add('mouse-look');return}
  document.body.classList.remove('mouse-look');lockLostAt=performance.now();
- if(playing&&!paused)setPaused(true)});
+ if(playing&&!paused&&!(window.Adventure&&Adventure.active))setPaused(true)});
 document.addEventListener('pointerlockerror',()=>{if(playing&&!paused&&!lockHinted){lockHinted=true;toast('Haz clic en el juego para controlar la cámara con el ratón')}});
 document.addEventListener('mousemove',e=>{if(!lockActive()||!playing||paused)return;
  const k=SENS_LEVELS[sensIdx][1],mx=Math.max(-250,Math.min(250,e.movementX||0)),my=Math.max(-250,Math.min(250,e.movementY||0));
@@ -305,6 +293,7 @@ function loop(now){
   fpsFrames++;if(now-fpsClock>=500){const f=Math.round(fpsFrames*1000/(now-fpsClock));fpsFrames=0;fpsClock=now;if(!$('fpsMeter').hidden)$('fpsMeter').textContent=f+' FPS'}
   const dt=Math.min((now-last)/1000,.05);last=now;
   if(paused){if(mode!=='real')renderer.render(scene,camera);else renderer.clear();return}
+  if(window.Adventure&&Adventure.active){Adventure.cinematic(dt);renderer.render(scene,camera);return}
   if(playing){
     let ix=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+jx;
     let iz=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0)+jz;
@@ -317,6 +306,7 @@ function loop(now){
     vy-=G*dt;py+=vy*dt;
     if(danceT>0){danceT-=dt;body.rotateY(dt*12);if(grounded)vy=Math.max(vy,4.5)}
     px+=vx*dt;pz+=vz*dt;
+    if(Nature.coastDistance(px,pz)>8&&terrainHeight(px,pz)<.5){vx*=Math.pow(.35,dt);vz*=Math.pow(.35,dt);if(terrainHeight(px,pz)<-.6){px-=vx*dt*2;pz-=vz*dt*2;vx*=.35;vz*=.35;}}
     const floorAfter=terrainHeight(px,pz)+PR*.88;
     if(py<floorAfter||(grounded&&vy<=0&&py<floorAfter+.25)){if(vy<-4)sfx.land();py=floorAfter;vy=mode==='caos'&&vy<-3?-vy*.7:0}
     const sp=Math.hypot(vx,vz);dist+=sp*dt;
@@ -355,6 +345,8 @@ function loop(now){
       if(od<md&&py-PR*.88<q.y+.6){const nx2=od>1e-4?ox/od:1,nz2=od>1e-4?oz/od:0;q.x=px+nx2*md;q.z=pz+nz2*md}
       for(const o of ACT){if(o.kind==='pump')continue;const t=o.m.position,tx=q.x-t.x,tz=q.z-t.z,m2=o.r+PR*.95;if(Math.abs(tx)>m2||Math.abs(tz)>m2)continue;const td=Math.hypot(tx,tz);
        if(td<m2){const ux=td>1e-4?tx/td:1,uz=td>1e-4?tz/td:0;q.x=t.x+ux*m2;q.z=t.z+uz*m2;n.a=Math.atan2(uz,ux)}}}
+     // Las papas vecinas se mantienen sobre tierra al llegar a la costa.
+     if(Nature.coastDistance(n.g.position.x,n.g.position.z)>8&&terrainHeight(n.g.position.x,n.g.position.z)<.3){n.g.position.x=Math.min(n.g.position.x,Nature.coastEdge(n.g.position.z)+7);n.a=Math.PI*.8+Math.random()*Math.PI*.4;n.t=2}
      n.g.position.y=terrainHeight(n.g.position.x,n.g.position.z)+PR*.72;n.g.children[0].rotateZ(-dt*2);n.cd-=dt;n.g.children[1].material.opacity=1-Math.min(1,Math.max(0,dd-7)/6);
      if(dd<2.6&&n.cd<=0){n.cd=10;toast('🥔 '+n.name+': "'+NPC_PHRASES[Math.random()*NPC_PHRASES.length|0]+'"');sfx.squeak();ach('npc')}}
     // Rocoso, la roca mascota (con colisión: ya no se mete dentro de la papa)
@@ -405,8 +397,9 @@ function loop(now){
     camera.position.set(tx,ty,tz);
     if(shake>0){camera.position.x+=(Math.random()-.5)*shake*.9;camera.position.y+=(Math.random()-.5)*shake*.7;shake=Math.max(0,shake-dt*2.2)}
     camera.lookAt(px,py+1,pz);
-    if(mode==='caos'){hue=(hue+dt*.1)%1;if(goldTime<=0)bodyMat().color.setHSL(.08+Math.sin(now/600)*.06,.35,.85)}
+    
     updateHUD(sp,dt);
+    if(window.Adventure)Adventure.tick(dt,sp*dt);
 
   }
   if(!playing){world.update(px,pz,dt);camera.position.set(px+Math.sin(now*.00003)*1.1+1.6,terrainHeight(px,pz)+5.6,pz+15);camera.lookAt(px,terrainHeight(px,pz)+1.5,pz-8);potato.position.set(px,terrainHeight(px,pz)+PR*.88,pz)}
@@ -430,7 +423,7 @@ function updateHUD(speed,dt){hudClock+=dt;if(hudClock<.15)return;hudClock=0;
 function updateQualityLabel(){$('quality').textContent=world.quality==='alto'?'Gráficos: altos':'Gráficos: ligeros'}
 $('quality').onclick=()=>{world.setQuality(world.quality==='alto'?'bajo':'alto');ACT=world.props;updateQualityLabel();toast(world.quality==='alto'?'Detalle alto activado':'Detalle ligero activado')};updateQualityLabel();
 $('helpBtn').onclick=()=>$('help').classList.toggle('open');$('closeHelp').onclick=()=>$('help').classList.remove('open');
-addEventListener('blur',()=>{for(const k in keys)keys[k]=0;jx=jz=0;wantJump=false;if(playing&&!paused)setPaused(true)});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=0;jx=jz=0;wantJump=false;if(playing&&!paused&&!(window.Adventure&&Adventure.active))setPaused(true)});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing&&!paused)setPaused(true)});
 function disposeGold(){if(!goldMesh)return;scene.remove(goldMesh);goldMesh.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(o.material.map)o.material.map.dispose();o.material.dispose()}});goldMesh=null}
 // Explicit diagnostics for regression and visual smoke tests, read-only during normal play.
@@ -463,6 +456,6 @@ document.querySelectorAll('.js-fs').forEach(b=>b.onclick=toggleFull);
 addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!CAPN){toggleFull();e.preventDefault()}
  if(e.code==='F3'){e.preventDefault();$('fpsMeter').hidden=!$('fpsMeter').hidden}});
 fsLabel();applyFps(false);
-window.PapaDiagnostics={fpsGate,snapshot:()=>({camYaw,camPitch,locked:lockActive(),rocoso:rocoso?{x:rocoso.g.position.x,y:rocoso.g.position.y,z:rocoso.g.position.z}:null,mode,playing,paused,position:{x:px,y:py,z:pz},floor:terrainHeight(px,pz),chunks:world.chunks.size,props:ACT.length,quality:world.quality,textureFailures:world.textureFailures,loadedTextures:world.textureTotal-world.pending,renderer:renderer.info.render,memory:renderer.info.memory}),height:terrainHeight,teleport:(x,z,ax,az)=>{px=x;pz=z;vx=ax||0;vz=az||0;py=terrainHeight(x,z)+PR*.88;vy=0}};
+window.PapaDiagnostics={fpsGate,snapshot:()=>({camYaw,camPitch,locked:lockActive(),rocoso:rocoso?{x:rocoso.g.position.x,y:rocoso.g.position.y,z:rocoso.g.position.z}:null,story:window.Adventure?Adventure.snapshot():null,mode,playing,paused,position:{x:px,y:py,z:pz},floor:terrainHeight(px,pz),chunks:world.chunks.size,props:ACT.length,quality:world.quality,textureFailures:world.textureFailures,loadedTextures:world.textureTotal-world.pending,renderer:renderer.info.render,memory:renderer.info.memory}),height:terrainHeight,teleport:(x,z,ax,az)=>{px=x;pz=z;vx=ax||0;vz=az||0;py=terrainHeight(x,z)+PR*.88;vy=0}};
 renderAch();requestAnimationFrame(loop);
 const loadStart=performance.now();function ready(){if(world.pending&&performance.now()-loadStart<15000){$('loadMsg').textContent='Preparando materiales y paisaje…';setTimeout(ready,100);return}const l=$('load');l.classList.add('ready');setTimeout(()=>l.remove(),700);if(world.textureFailures.length)toast('Algunos materiales no se cargaron. Vuelve a abrir el juego.')}ready();

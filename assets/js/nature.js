@@ -12,8 +12,10 @@ function pathCenter(z){return 5*Math.sin(z*.027)+3*Math.sin(z*.059)}
 function pathDist(x,z){return Math.abs(x-pathCenter(z))}
 function rawHeight(x,z){return (fbm(x*.016,z*.016)-.5)*18+Math.sin(x*.025+z*.013)*1.7+(noise(x*.09,z*.09)-.5)*.55}
 const spawnHeight=rawHeight(0,0);
-function height(x,z){const raw=rawHeight(x,z)-spawnHeight;const h=raw*(.5+.5*smooth(4,27,Math.hypot(x,z)));return h-.16*(1-smooth(1.4,3.8,pathDist(x,z)))}
-function biome(x,z){const d=Math.hypot(x,z);if(d<100)return{id:noise(x*.013+9,z*.013+7)>.59?'bosque':'pradera',n:noise(x*.013+9,z*.013+7)>.59?'Bosque de los robles':'Pradera del sendero'};const n=noise(x*.004-12,z*.004+4);return n<.3?{id:'desierto',n:'Tierras de arena'}:n>.72?{id:'nieve',n:'Laderas del norte'}:n>.48?{id:'bosque',n:'Bosque de los robles'}:{id:'pradera',n:'Pradera abierta'}}
+function coastEdge(z){return 105+9*Math.sin(z*.018)+5*Math.sin(z*.039)}
+function coastDistance(x,z){return x-coastEdge(z)}
+function height(x,z){const raw=rawHeight(x,z)-spawnHeight,h=raw*(.5+.5*smooth(4,27,Math.hypot(x,z)))-.16*(1-smooth(1.4,3.8,pathDist(x,z))),d=coastDistance(x,z);let coast=Math.max(-5,1.55-d*.135+Math.sin(z*.11)*.1),y=T.MathUtils.lerp(h,coast,smooth(-28,8,d));if(d>25){for(const[ix,iz,r,hh]of[[174,-55,17,6],[210,32,22,8],[180,-135,14,5]]){const rad=Math.hypot(x-ix,z-iz)/r;if(rad<1.8)y=Math.max(y,-4+hh*Math.exp(-rad*rad*1.8))}}y=T.MathUtils.lerp(y,2.05,1-smooth(5,15,Math.hypot(x-96,z+29)));if(x>98&&x<183){const bankZ=-55+4*Math.sin((x-119)*.08),bank=1-smooth(2.2,5.5,Math.abs(z-bankZ));y=Math.max(y,-2+2.45*bank*smooth(98,111,x)*(1-smooth(172,183,x)))}return y}
+function biome(x,z){const c=coastDistance(x,z);if(c>-18)return{id:c>16?'costa':'playa',n:c>16?'Islotes del horizonte':'Playa de la buena vida'};if(z<-190)return{id:'nieve',n:'Laderas del norte'};if(x<-145)return{id:'desierto',n:'Tierras de arena'};const n=noise(x*.013+9,z*.013+7);return n>.53?{id:'bosque',n:'Bosque de los robles'}:{id:'pradera',n:'Pradera del sendero'}}
 function photoOverlay(tex,key,o){o=o||{};const src=(window.PAPA_TEXTURES||{})[key];if(!src||!tex||!tex.image)return tex;const img=new Image();img.onload=()=>{const c=tex.image,x=c.getContext('2d'),tile=o.tile||1,tw=c.width/tile,th=c.height/tile;x.save();x.globalAlpha=o.alpha==null?.6:o.alpha;x.globalCompositeOperation=o.op||'luminosity';for(let i=0;i<tile;i++)for(let j=0;j<tile;j++)x.drawImage(img,o.sx||0,o.sy||0,o.sw||img.width,o.sh||img.height,i*tw,j*th,tw,th);x.restore();if(o.after)o.after();tex.needsUpdate=true};img.src=src;return tex}
 function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new T.CanvasTexture(c);t.encoding=T.sRGBEncoding;t.anisotropy=4;return t}
 function repeated(t,n=1){t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(n,n);return t}
@@ -164,7 +166,7 @@ class World{
  buildMountains(){
   // Montanas 3D con relieve real (malla polar + normales) y texturas fotograficas de Poly Haven. La bruma usa el color de la niebla de la escena.
   this.ridges=new T.Group();
-  const bands=[{r0:165,r1:245,peak:50,seed:3,rows:14,sc:34},{r0:250,r1:345,peak:92,seed:9,rows:14,sc:48},{r0:350,r1:450,peak:128,seed:17,rows:14,sc:64}];
+  const bands=[{r0:165,r1:245,peak:26,seed:3,rows:14,sc:34},{r0:250,r1:345,peak:48,seed:9,rows:14,sc:48},{r0:350,r1:450,peak:70,seed:17,rows:14,sc:64}];
   const COLS=320,FLOOR=-26,sm=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
   const rock=this.texture('rock_boulder_dry_diff'),rockN=this.texture('rock_boulder_dry_nor_gl',1,true),grass=this.texture('aerial_grass_rock_diff');
   const fbm=(x,z,o)=>{let a=.5,f=1,s=0,n=0;for(let q=0;q<5;q++){s+=a*noise(x*f+o+q*17.3,z*f-o*1.7+q*9.1);n+=a;a*=.5;f*=2.07}return s/n};
@@ -178,9 +180,9 @@ class World{
         const env=Math.pow(Math.sin(Math.PI*Math.min(1,t*1.04)),.85);
         const detail=(fbm(x*.045,z*.045,b.seed+11)-.5)*7;
         let h=FLOOR+env*(b.peak*(.2+.5*mass+.55*ridge*mass)+detail*env+30)+(t<.04?-8:0);
-        h=Math.max(FLOOR,h);
+        h=Math.max(FLOOR,h);h=T.MathUtils.lerp(h,FLOOR,smooth(5,90,x));
         pos.push(x,h,z);hs.push(h);
-        uv.push(a*rad/b.sc,(rad+h*.9)/b.sc);
+        uv.push((x+h*.25)/14,(z+h*.35)/14);
         haze.push(0);mixv.push(0);
       }}
     for(let r=0;r<ROWS;r++)for(let k=0;k<COLS;k++){const n=r*(COLS+1)+k,m=n+COLS+1;idx.push(n,m,n+1,n+1,m,m+1)}
@@ -212,5 +214,5 @@ class World{
  setQuality(q){this.quality=q;try{localStorage.setItem('papa_quality',q)}catch(e){}const big=matchMedia('(pointer:fine)').matches&&Math.max(screen.width,screen.height)*(devicePixelRatio||1)>=2500,sm=q==='bajo'?1024:big?4096:2048;if(this.onQuality)this.onQuality(q);this.sun.shadow.mapSize.set(sm,sm);if(this.sun.shadow.map){this.sun.shadow.map.dispose();this.sun.shadow.map=null}this.reset()}
 }
 function localStorageSafe(k){try{return localStorage.getItem(k)}catch(e){return null}}
-window.Nature={World,height,biome,pathDist,rng,noise,merge};
+window.Nature={World,height,biome,pathDist,rng,noise,merge,branch,coastDistance,coastEdge};
 })();

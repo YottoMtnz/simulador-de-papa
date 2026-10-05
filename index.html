@@ -59,30 +59,38 @@ footer a{color:var(--teal2);text-decoration:none;font-weight:700}
 @keyframes dance{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg) translateY(-6px)}}
 .fp{position:fixed;font-size:1.5rem;opacity:.12;pointer-events:none;z-index:0;animation:float linear infinite}
 @keyframes float{from{transform:translateY(110vh) rotate(0)}to{transform:translateY(-10vh) rotate(360deg)}}
+
+.hero{background:linear-gradient(180deg,rgba(17,28,24,.52),rgba(12,23,17,.93)),url('capturas/menu_v13_paisaje.png') center/cover}
+.hero::before{background:linear-gradient(90deg,rgba(12,23,17,.3),transparent)}
+h1{font-family:Georgia,serif;font-weight:500;letter-spacing:-.055em;text-shadow:0 3px 30px #0a1a0c}
+h1 .t{background:none;color:#e4dcc0;font-size:.46em;letter-spacing:.2em}
+.badge{border-color:#d7d9c044;color:#e8e2c8;background:#172719b0;letter-spacing:.18em;font-size:.7rem}
+.sub{color:#e6e4d3}.btn-play{background:#e3ddbc;color:#25372b;box-shadow:0 8px 24px #0003;border-radius:4px 26px 4px 26px}
+.card,.mode{border-radius:5px 25px 5px 25px;background:#18291e}.m-noche{background:#19222d}.m-ciegas{background:#202520}
 </style>
 </head>
 <body>
-<nav><div class="logo">🥔 <span>Tierras</span> Vivas</div><a class="btn btn-play" style="padding:10px 24px;font-size:1rem" href="juego.html">▶ Jugar</a></nav>
+<nav><div class="logo"><span>Tierras</span> Vivas</div><a class="btn btn-play" style="padding:10px 24px;font-size:1rem" href="juego.html">▶ Jugar</a></nav>
 <div class="hero">
-  <div class="potato">🥔</div>
-  <div class="badge">🌿 Juego 3D gratuito · en tu navegador</div>
-  <h1>SIMULADOR DE PAPA<br><span class="t">· TIERRAS VIVAS ·</span></h1>
-  <p class="sub">Rueda por colinas, senderos y bosques. Empuja calabazas, haz combos y cuestiona tu existencia en un mundo natural que nunca termina.</p>
+  
+  <div class="badge">EDICIÓN 13 · EXPLORA SIN CONEXIÓN</div>
+  <h1>Simulador de Papa<br><span class="t">· TIERRAS VIVAS ·</span></h1>
+  <p class="sub">Un camino entre bosques y playas. Rueda, conoce a sus habitantes y vuelve mañana: tu recorrido queda guardado.</p>
   <div class="cta"><a class="btn btn-play" href="juego.html">▶ JUGAR AHORA</a></div>
   <div class="shots">
-    <img src="capturas/campo.png" alt="Campo al atardecer" loading="lazy">
-    <img src="capturas/noche.png" alt="Noche lunar" loading="lazy">
-    <img src="capturas/movil.png" alt="En el móvil" loading="lazy">
+    <img src="capturas/campo_v13.png" alt="Campo al atardecer" loading="lazy">
+    <img src="capturas/noche_v13.png" alt="Noche lunar" loading="lazy">
+    <img src="capturas/costa_v13.png" alt="La costa y sus habitantes" loading="lazy">
   </div>
 </div>
 <section>
   <h2>Un mundo <span class="t">vivo</span></h2>
-  <p class="lead">Ya no es un plano infinito: ahora hay tierra bajo tus rodadas.</p>
+  <p class="lead">Tierra, hierba, arena y nieve con materiales fotográficos. Todos los recursos están incluidos.</p>
   <div class="grid">
     <div class="card"><span class="ic">🌄</span><h3>Terreno natural</h3><p>Colinas, desniveles y un sendero sinuoso. La papa y la cámara se adaptan a la altura.</p></div>
-    <div class="card"><span class="ic">🌲</span><h3>Vegetación viva</h3><p>Árboles con raíces y follaje al viento, hierba, flores y helechos por todas partes.</p></div>
+    <div class="card"><span class="ic">🌲</span><h3>Vegetación viva</h3><p>Troncos detallados, copas al viento, pinos, abedules, palmeras y hierba.</p></div>
     <div class="card"><span class="ic">💡</span><h3>Luz y ambiente</h3><p>Atardecer cálido, sombras del follaje, bruma a lo lejos y noche estrellada.</p></div>
-    <div class="card"><span class="ic">🏜️</span><h3>Biomas lejanos</h3><p>Explora y encuentra zonas áridas, cactus, cocos y tundra nevada.</p></div>
+    <div class="card"><span class="ic">🏜️</span><h3>Biomas lejanos</h3><p>Explora zonas áridas, laderas nevadas y una costa con cocos e islotes.</p></div>
     <div class="card"><span class="ic">🎃</span><h3>Combos y papa dorada</h3><p>Embiste calabazas para encadenar combos. Atrapa la 🥇 papa dorada: 10s de velocidad e invencibilidad.</p></div>
     <div class="card"><span class="ic">🏆</span><h3>Absurdo garantizado</h3><p>Logros inútiles, papas NPC con nombres graciosos, tu roca mascota 🪨 y pensamientos existenciales.</p></div>
   </div>
@@ -93,28 +101,26 @@ footer a{color:var(--teal2);text-decoration:none;font-weight:700}
   <div class="modes">
     <div class="mode m-campo"><div class="big">🌄</div><h3>Salir al campo</h3><p>Luz de tarde, gravedad normal y exploración libre. Para papas relajadas.</p></div>
     <div class="mode m-noche"><div class="big">🌙</div><h3>Noche lunar</h3><p>Iluminación nocturna, estrellas y gravedad reducida. Mucho caos.</p></div>
-    <div class="mode m-ciegas"><div class="big">🖤</div><h3>A ciegas</h3><p>Sin visión, orientación por sonido. Las papas no tienen ojos. Buena suerte.</p></div>
+    <div class="mode m-ciegas"><div class="big">🖤</div><h3>A ciegas</h3><p>Sin visión, orientación por sonido. Buena suerte.</p></div>
   </div>
 </section>
 <section>
   <h2>Galería <span class="t">📸</span></h2>
-  <p class="lead">Fotos reales del juego. Ninguna papa fue photoshopeada.</p>
+  <p class="lead">Capturas del juego en funcionamiento · versión 13.</p>
   <div class="gal">
-    <figure><img src="capturas/menu.png" alt="Menú" loading="lazy"><figcaption>Menú sobre el mundo 3D</figcaption></figure>
-    <figure><img src="capturas/campo.png" alt="Campo" loading="lazy"><figcaption>El campo al atardecer</figcaption></figure>
-    <figure><img src="capturas/noche.png" alt="Noche" loading="lazy"><figcaption>Noche lunar</figcaption></figure>
-    <figure><img src="capturas/movil.png" alt="Móvil" loading="lazy"><figcaption>En el móvil con joystick</figcaption></figure>
-    <figure><img src="capturas/menu_movil.png" alt="Menú móvil" loading="lazy"><figcaption>Menú en el móvil</figcaption></figure>
+    <figure><img src="capturas/menu_v13.png" alt="Menú" loading="lazy"><figcaption>Menú sobre el mundo 3D</figcaption></figure>
+    <figure><img src="capturas/campo_v13.png" alt="Campo" loading="lazy"><figcaption>El campo al atardecer</figcaption></figure>
+    <figure><img src="capturas/noche_v13.png" alt="Noche" loading="lazy"><figcaption>Noche lunar</figcaption></figure>
+    <figure><img src="capturas/movil_v13.png" alt="Móvil" loading="lazy"><figcaption>En el móvil con joystick</figcaption></figure>
+    <figure><img src="capturas/menu_movil_v13.png" alt="Menú móvil" loading="lazy"><figcaption>Menú en el móvil</figcaption></figure>
   </div>
   <div style="text-align:center;margin-top:40px"><a class="btn btn-play" href="juego.html">▶ JUGAR AHORA</a></div>
 </section>
 <footer>
   <div style="margin-bottom:12px"><span class="dance">🥔</span></div>
-  <p>Hecho con almidón por <a href="https://github.com/YottoMtnz">YottoMtnz</a></p>
+  <p>Creado por <a href="https://github.com/YottoMtnz">Fraudy Martinez Madruga · YottoMtnz</a></p>
   <p style="margin-top:8px;font-size:.85rem">Código MIT · Materiales Poly Haven CC0 · <a href="CREDITOS.md">Créditos</a></p>
 </footer>
-<script>
-for(let i=0;i<12;i++){const s=document.createElement('div');s.className='fp';s.textContent=['🥔','🌿','🎃'][i%3];s.style.left=Math.random()*100+'vw';s.style.animationDuration=(10+Math.random()*14)+'s';s.style.animationDelay=(-Math.random()*14)+'s';document.body.appendChild(s)}
-</script>
+
 </body>
 </html>
