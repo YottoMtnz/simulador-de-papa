@@ -201,7 +201,7 @@ function spawnRocoso(){if(rocoso){scene.remove(rocoso.g);const m=rocoso.g.childr
  g.position.set(px+2.5,.5,pz+2.5);scene.add(g);rocoso={g:g,vx:0,vz:0,vy:0,y:.5};rocFarT=0}
 
 // ===== pausa y baile =====
-function setPaused(v){if(!playing||paused===v)return;paused=v;
+function setPaused(v){if(!playing||paused===v)return;paused=v;if(window.Music)Music.duck(v);
  $('pause').style.display=paused?'flex':'none';
  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
  if(rollGain&&AC)rollGain.gain.setTargetAtTime(0,AC.currentTime,.05);
@@ -215,7 +215,7 @@ function setMode(m){
   thinkT=rnd(20,32);thinkOp=0;danceT=0;$('comboBig').style.opacity=0;$('pause').style.display='none';
   if(goldMesh){disposeGold()}
   updateGoldTint();spawnNPCs();spawnRocoso();renderAch();
-  initAudio();if(AC.state==='suspended')AC.resume();
+  initAudio();if(AC.state==='suspended')AC.resume();if(window.Music)Music.start();
   $('menu').style.display='none';document.body.classList.add('playing');document.body.classList.remove('is-photo');photoMode=false;$('photoExit').hidden=true;$('achPanel').classList.remove('open');camYaw=0;camPitch=.34;camD=12.6;camFocus.set(0,py,0);camera.position.set(0,py+5,13);camera.lookAt(0,py+1,0);world.configure(m);G=m==='caos'?7:28;for(const k in keys)keys[k]=0;jx=jz=0;wantJump=false;
   if(m==='real'){renderer.domElement.style.visibility='hidden';scene.background=new THREE.Color(0);toast('Modo realista: no ves nada. Las papas no tienen ojos 👁️🚫');setTimeout(()=>toast('Pero sigues rodando. Se siente… algo.'),3500)}
   else{renderer.domElement.style.visibility='visible'}
@@ -225,8 +225,8 @@ function setMode(m){
   lockMouse();
 }
 document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
-$('back').onclick=()=>{unlockMouse();playing=false;paused=false;$('pause').style.display='none';if(rollGain)rollGain.gain.value=0;$('menu').style.display='flex';document.body.classList.remove('playing','is-photo');renderer.domElement.style.visibility='visible';mode=null;world.configure('huerto');photoMode=false;$('photoExit').hidden=true;$('achPanel').classList.remove('open')};
-$('mute').onclick=()=>{muted=!muted;$('mute').classList.toggle('muted',muted);$('mute').setAttribute('aria-label',muted?'Activar sonido':'Silenciar sonido');if(rollGain)rollGain.gain.value=0};
+$('back').onclick=()=>{if(window.Music)Music.stop();unlockMouse();playing=false;paused=false;$('pause').style.display='none';if(rollGain)rollGain.gain.value=0;$('menu').style.display='flex';document.body.classList.remove('playing','is-photo');renderer.domElement.style.visibility='visible';mode=null;world.configure('huerto');photoMode=false;$('photoExit').hidden=true;$('achPanel').classList.remove('open')};
+$('mute').onclick=()=>{muted=!muted;if(window.Music)Music.setMuted(muted);$('mute').classList.toggle('muted',muted);$('mute').setAttribute('aria-label',muted?'Activar sonido':'Silenciar sonido');if(rollGain)rollGain.gain.value=0};
 $('achBtn').onclick=()=>toggleAch();
 $('pauseBtn').onclick=()=>togglePause();
 $('resume').onclick=()=>setPaused(false);
@@ -272,6 +272,7 @@ document.addEventListener('mousemove',e=>{if(!lockActive()||!playing||paused)ret
  const k=SENS_LEVELS[sensIdx][1],mx=Math.max(-250,Math.min(250,e.movementX||0)),my=Math.max(-250,Math.min(250,e.movementY||0));
  camYaw-=mx*k;camPitch=Math.max(.06,Math.min(1.35,camPitch+my*k))});
 function updateSensLabel(){$('sens').textContent='Sensibilidad: '+SENS_LEVELS[sensIdx][0]}
+const musicBtn=$('musicBtn');if(musicBtn&&window.Music){musicBtn.textContent=Music.label();musicBtn.onclick=()=>{musicBtn.textContent=Music.cycle()}}
 $('sens').onclick=()=>{sensIdx=(sensIdx+1)%3;try{localStorage.setItem('papa_sens',sensIdx)}catch(e){}updateSensLabel()};updateSensLabel();
 if(!FINE)$('sens').style.display='none';
 $('cam').onclick=()=>{camMode=!camMode;$('cam').classList.toggle('on',camMode);toast(camMode?'🎥 Arrastra para girar la cámara · pellizca para zoom':'🎥 Cámara bloqueada')};
